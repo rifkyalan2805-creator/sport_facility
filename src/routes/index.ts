@@ -1,0 +1,43 @@
+import { Router } from 'express';
+import authRoutes from './auth.routes';
+import bookingRoutes from './booking.routes';
+import courtRoutes from './court.routes';
+import membershipRoutes from './membership.routes';
+import poolRoutes from './pool.routes';
+import ticketRoutes from './ticket.routes';
+import eventRoutes from './event.routes';
+import promoRoutes from './promo.routes';
+import loyaltyRoutes from './loyalty.routes';
+import reviewRoutes from './review.routes';
+import paymentRoutes from './payment.routes';
+import waitingListRoutes from './waitingList.routes';
+import notificationRoutes from './notification.routes';
+import staffRoutes from './staff.routes';
+import inventoryRoutes from './inventory.routes';
+import reportRoutes from './report.routes';
+import settingRoutes from './setting.routes';
+import cmsRoutes from './cms.routes';
+
+const router = Router();
+
+router.get('/health', (_req, res) => res.json({ status: 'ok' }));
+router.use('/auth', authRoutes);
+router.use('/courts', courtRoutes);
+router.use('/bookings', bookingRoutes);
+router.use('/waiting-list', waitingListRoutes);
+router.use('/membership', membershipRoutes);
+router.use('/pool', poolRoutes);
+router.use('/tickets', ticketRoutes);
+router.use('/events', eventRoutes);
+router.use('/promos', promoRoutes);
+router.use('/loyalty', loyaltyRoutes);
+router.use('/reviews', reviewRoutes);
+router.use('/payments', paymentRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/staff', staffRoutes);
+router.use('/inventory', inventoryRoutes);
+router.use('/reports', reportRoutes);
+router.use('/settings', settingRoutes);
+router.use('/cms', cmsRoutes);
+
+export default router;
