@@ -1,15 +1,21 @@
 import { z } from 'zod';
-import { court_type } from '@prisma/client';
 
 const uuid = z.string().uuid('Harus berupa UUID valid');
 const timeStr = z
   .string()
   .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Jam harus berformat HH:mm (24 jam)');
 
+// Jenis lapangan yang diizinkan dibuat/diubah. Enum DB `court_type` masih
+// menyimpan nilai lain (badminton/basketball/futsal/other) tetapi DITOLAK di sini.
+const ALLOWED_COURT_TYPES = ['paddle', 'tennis'] as const;
+const courtTypeSchema = z.enum(ALLOWED_COURT_TYPES, {
+  errorMap: () => ({ message: 'type hanya boleh: paddle atau tennis' }),
+});
+
 export const createCourtSchema = z.object({
   name: z.string().min(1).max(100),
   code: z.string().min(1).max(20),
-  type: z.nativeEnum(court_type).default('paddle'),
+  type: courtTypeSchema.default('paddle'),
   price_per_hour: z.coerce.number().nonnegative(),
   capacity: z.coerce.number().int().positive().default(4),
   is_indoor: z.boolean().default(true),
@@ -25,7 +31,7 @@ export const updateCourtSchema = z
   .object({
     name: z.string().min(1).max(100).optional(),
     code: z.string().min(1).max(20).optional(),
-    type: z.nativeEnum(court_type).optional(),
+    type: courtTypeSchema.optional(),
     price_per_hour: z.coerce.number().nonnegative().optional(),
     capacity: z.coerce.number().int().positive().optional(),
     is_indoor: z.boolean().optional(),
