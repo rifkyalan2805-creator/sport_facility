@@ -4,6 +4,8 @@ import FacilitiesGallery from "@/components/FacilitiesGallery";
 import PadelShowcase from "@/components/PadelShowcase";
 import SwimmingShowcase from "@/components/SwimmingShowcase";
 import SpreadHero from "@/components/SpreadHero";
+import CourtsSection from "@/components/CourtsSection";
+import MembershipSection from "@/components/MembershipSection";
 import WhyUsStats from "@/components/WhyUsStats";
 import Footer from "@/components/Footer";
 
@@ -17,6 +19,8 @@ export default function Home() {
         <PadelShowcase />
         <SwimmingShowcase />
         <SpreadHero />
+        <CourtsSection />
+        <MembershipSection />
         <WhyUsStats />
       </main>
       <Footer />

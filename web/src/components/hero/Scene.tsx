@@ -52,10 +52,10 @@ export default function Scene() {
         <EffectComposer>
           <Bloom
             mipmapBlur
-            luminanceThreshold={0.6}
-            luminanceSmoothing={0.25}
-            intensity={0.85}
-            radius={0.75}
+            luminanceThreshold={0.4}
+            luminanceSmoothing={0.3}
+            intensity={1.45}
+            radius={0.85}
           />
           <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
         </EffectComposer>

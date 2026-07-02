@@ -105,8 +105,8 @@ void main() {
   vec3 neon = palette(t);
 
   // Base kaca keputihan + emissive neon yang menguat di tepi (fresnel)
-  vec3 glass = mix(vec3(0.93, 0.95, 1.0), neon, 0.45);
-  vec3 emissive = neon * (0.55 + fresnel * 1.6);
+  vec3 glass = mix(vec3(0.93, 0.95, 1.0), neon, 0.5);
+  vec3 emissive = neon * (1.0 + fresnel * 2.4);
   vec3 color = glass + emissive;
 
   // Bloom akan menangkap bagian paling terang

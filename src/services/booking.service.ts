@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, booking_type } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { AppError } from '../utils/AppError';
 import { dateToTime, durationHours, timeToDate } from '../utils/time';
@@ -17,6 +17,7 @@ import {
   SiteSettingRepository,
   siteSettingRepository,
 } from '../repositories/siteSetting.repository';
+import { PricingRepository, pricingRepository } from '../repositories/pricing.repository';
 
 // Status yang masih boleh dibatalkan oleh user.
 const CANCELLABLE: Array<'pending' | 'confirmed'> = ['pending', 'confirmed'];
@@ -27,7 +28,8 @@ export class BookingService {
     private readonly bookings: BookingRepository = bookingRepository,
     private readonly courts: CourtRepository = courtRepository,
     private readonly abonemen: UserAbonemenRepository = userAbonemenRepository,
-    private readonly settings: SiteSettingRepository = siteSettingRepository
+    private readonly settings: SiteSettingRepository = siteSettingRepository,
+    private readonly pricing: PricingRepository = pricingRepository
   ) {}
 
   /**
@@ -65,6 +67,16 @@ export class BookingService {
 
     const duration = durationHours(input.startTime, input.endTime);
 
+    // Harga per jam dari tabel per-sport (dilewati jika pakai paket prabayar).
+    const unitPrice = input.abonemenId
+      ? new Prisma.Decimal(0)
+      : await this.resolveUnitPrice(
+          court,
+          input.bookingType,
+          input.withLight ?? true,
+          input.startTime
+        );
+
     // 4) Transaksi: lock court → cek bentrok → (abonemen) → create.
     return prisma.$transaction(
       async (tx) => {
@@ -84,11 +96,11 @@ export class BookingService {
         let totalPrice = new Prisma.Decimal(0);
         let abonemenId: string | null = null;
 
-        if (input.bookingType === 'abonemen') {
+        if (input.abonemenId) {
+          // Paket prabayar → total 0 & kurangi sesi.
           abonemenId = await this.consumeAbonemen(input, tx);
-          // total_price = 0 saat memakai abonemen (sesuai komentar schema).
         } else {
-          totalPrice = new Prisma.Decimal(court.price_per_hour).mul(duration);
+          totalPrice = unitPrice.mul(duration);
         }
 
         const data: Prisma.bookingsUncheckedCreateInput = {
@@ -137,6 +149,41 @@ export class BookingService {
 
     await this.abonemen.decrementRemaining(ab.id, tx);
     return ab.id;
+  }
+
+  /**
+   * Harga per jam sesuai jenis lapangan (sumber: tabel per-sport):
+   * - tenis  → tennis_prices (booking_type × with_light)
+   * - padel  → padel_prices (off-peak by start_time, selain itu normal)
+   * - lainnya → fallback courts.price_per_hour
+   */
+  private async resolveUnitPrice(
+    court: { type: string; price_per_hour: Prisma.Decimal },
+    bookingType: booking_type,
+    withLight: boolean,
+    startTime: string
+  ): Promise<Prisma.Decimal> {
+    if (court.type === 'tennis') {
+      const rows = await this.pricing.listTennis();
+      const row = rows.find(
+        (r) => r.is_active && r.booking_type === bookingType && r.with_light === withLight
+      );
+      if (row) return new Prisma.Decimal(row.price);
+    } else if (court.type === 'paddle') {
+      const rows = await this.pricing.listPadel();
+      const offPeak = rows.find(
+        (r) =>
+          r.is_active &&
+          r.time_start &&
+          r.time_end &&
+          dateToTime(r.time_start) <= startTime &&
+          startTime < dateToTime(r.time_end)
+      );
+      const normal = rows.find((r) => r.is_active && (!r.time_start || !r.time_end));
+      const chosen = offPeak ?? normal;
+      if (chosen) return new Prisma.Decimal(chosen.price);
+    }
+    return new Prisma.Decimal(court.price_per_hour);
   }
 
   async getBookingById(id: string) {

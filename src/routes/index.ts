@@ -17,6 +17,7 @@ import inventoryRoutes from './inventory.routes';
 import reportRoutes from './report.routes';
 import settingRoutes from './setting.routes';
 import cmsRoutes from './cms.routes';
+import pricingRoutes from './pricing.routes';
 
 const router = Router();
 
@@ -39,5 +40,6 @@ router.use('/inventory', inventoryRoutes);
 router.use('/reports', reportRoutes);
 router.use('/settings', settingRoutes);
 router.use('/cms', cmsRoutes);
+router.use('/pricing', pricingRoutes);
 
 export default router;

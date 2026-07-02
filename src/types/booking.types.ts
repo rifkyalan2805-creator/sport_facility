@@ -5,7 +5,8 @@ export interface CreateBookingInput {
   userId: string;
   courtId: string;
   bookingType: booking_type;
-  abonemenId?: string; // wajib jika bookingType === 'abonemen'
+  withLight?: boolean; // hanya berpengaruh untuk tenis (pilih tarif lampu/non-lampu)
+  abonemenId?: string; // jika diisi → paket prabayar (total 0)
   bookingDate: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endTime: string; // HH:mm

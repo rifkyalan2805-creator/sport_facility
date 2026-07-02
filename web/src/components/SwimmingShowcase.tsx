@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -16,6 +17,7 @@ const photos = [1, 2, 3, 4, 5, 6].map((n) => ({
 export default function SwimmingShowcase() {
   const root = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
+  const copy = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -24,10 +26,22 @@ export default function SwimmingShowcase() {
       // Jarak geser = lebar track yang melebihi layar.
       const distance = () => el.scrollWidth - window.innerWidth;
 
-      // Scroll vertikal → track bergerak HORIZONTAL (mekanik baru).
-      gsap.to(el, {
-        x: () => -distance(),
-        ease: "none",
+      const photos = gsap.utils.toArray<HTMLElement>(".swim-photo");
+
+      // Pudarkan tiap FOTO saat tepinya menyentuh area copy (copy TIDAK memudar).
+      const fadePhotos = () => {
+        if (!copy.current) return;
+        const boundary = copy.current.getBoundingClientRect().right;
+        const fadeStart = boundary + 60; // mulai memudar saat mendekati copy
+        const fadeEnd = boundary - 120; // hilang setelah melewati copy
+        photos.forEach((p) => {
+          const left = p.getBoundingClientRect().left;
+          const o = Math.max(0, Math.min(1, (left - fadeEnd) / (fadeStart - fadeEnd)));
+          gsap.set(p, { opacity: o });
+        });
+      };
+
+      const tl = gsap.timeline({
         scrollTrigger: {
           trigger: root.current,
           start: "top top",
@@ -35,8 +49,14 @@ export default function SwimmingShowcase() {
           pin: true,
           scrub: 1,
           invalidateOnRefresh: true,
+          onUpdate: fadePhotos,
+          onRefresh: fadePhotos,
         },
       });
+      // Foto bergeser horizontal sepanjang scroll (perilaku foto TIDAK diubah).
+      tl.to(el, { x: () => -distance(), ease: "none", duration: 1 }, 0);
+      // Copy di-counter-translate agar TERKUNCI & tetap terlihat sepanjang scroll.
+      tl.to(copy.current, { x: () => distance(), ease: "none", duration: 1 }, 0);
 
       // Bob mengambang per foto (efek "air") — selalu berjalan halus.
       gsap.utils.toArray<HTMLElement>(".swim-photo").forEach((photo, i) => {
@@ -62,8 +82,8 @@ export default function SwimmingShowcase() {
         ref={track}
         className="flex w-full flex-col gap-10 px-6 py-20 md:h-full md:w-max md:flex-row md:items-center md:gap-12 md:px-[6vw] md:py-0"
       >
-        {/* Panel teks (dibaca dulu, lalu scroll menyamping melewati foto) */}
-        <div className="shrink-0 md:w-[44vw] md:pr-8">
+        {/* Panel teks — terkunci di tempat lalu memudar saat foto bergeser. */}
+        <div ref={copy} className="relative z-20 shrink-0 md:w-[44vw] md:pr-8">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">
             <span className="h-1.5 w-1.5 rounded-full bg-neon-blue" />
             Aqua Ecosystem
@@ -80,12 +100,12 @@ export default function SwimmingShowcase() {
             Segarkan tubuhmu, tingkatkan teknikmu, dan temukan ritme terbaikmu
             bersama kami.
           </p>
-          <a
-            href="#"
+          <Link
+            href="/harga/pool"
             className="mt-8 inline-flex cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-neon-blue/25 transition-transform duration-200 hover:scale-[1.03]"
           >
             Daftar Member &amp; Mulai Berenang
-          </a>
+          </Link>
 
           <p className="mt-8 hidden items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-ink-400 md:flex">
             Scroll

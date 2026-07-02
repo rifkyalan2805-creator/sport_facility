@@ -1,68 +1,92 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * Aset foto — array of object lokal agar mudah diganti.
- * Ganti `src` di bawah dengan foto padel Anda (mis. /images/padel1.jpg ...).
- * Catatan: file "paddle 4" belum ada di folder, jadi slot ke-6 memakai
- * placeholder sementara — silakan timpa.
- */
-const leftPhotos = [
-  { id: "l1", src: "/images/sport club/padel/paddle 1.jpg", alt: "Aksi padel 1" },
-  { id: "l2", src: "/images/sport club/padel/paddle 2.jpg", alt: "Aksi padel 2" },
-  { id: "l3", src: "/images/sport club/padel/paddle 3.jpg", alt: "Aksi padel 3" },
+// 4 gambar sudut mengelilingi konten tengah (mudah diganti — ubah `src`).
+const corners = [
+  { cls: "image-top-left", pos: "left-[4%] top-[12%]", src: "/images/sport club/padel/paddle 1.jpg" },
+  { cls: "image-bottom-left", pos: "left-[6%] bottom-[10%]", src: "/images/sport club/padel/paddle 2.jpg" },
+  { cls: "image-top-right", pos: "right-[4%] top-[14%]", src: "/images/sport club/padel/paddle 3.jpg" },
+  { cls: "image-bottom-right", pos: "right-[6%] bottom-[10%]", src: "/images/sport club/padel/paddle 4.jpg" },
 ];
 
-const rightPhotos = [
-  { id: "r1", src: "/images/sport club/padel/paddle 5.jpg", alt: "Aksi padel 5" },
-  { id: "r2", src: "/images/sport club/padel/paddle 6.jpg", alt: "Aksi padel 6" },
-  { id: "r3", src: "/images/sport club/padel/paddle 1.jpg", alt: "Aksi padel (placeholder)" },
-];
-
-function PhotoCard({ src, alt }: { src: string; alt: string }) {
+function Copy() {
   return (
-    <div className="overflow-hidden rounded-3xl bg-ink-900/5 shadow-lg shadow-ink-900/10">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={encodeURI(src)}
-        alt={alt}
-        loading="lazy"
-        className="h-64 w-full object-cover md:h-[42vh]"
-      />
-    </div>
+    <>
+      <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-neon-blue" />
+        Padel Ecosystem
+      </span>
+      <h2 className="mt-4 text-balance text-3xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-4xl">
+        Masuk ke Dalam{" "}
+        <span className="text-gradient-neon">Ekosistem Padel</span> Kami
+      </h2>
+      <p className="mt-4 max-w-md text-balance text-[15px] leading-normal text-ink-500">
+        Padel bukan sekadar olahraga, ini adalah tempat di mana kompetisi
+        bertemu dengan koneksi. Mulai dari pemula hingga pemain pro, kami
+        membangun ruang komunitas yang aktif, fasilitas lapangan premium, dan
+        turnamen yang seru. Ambil raketmu, temukan rekan tanding baru, dan mari
+        tumbuh bersama di ekosistem Padel paling dinamis saat ini.
+      </p>
+      <Link
+        href="/harga/padel"
+        className="mt-6 inline-flex cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-neon-purple/25 transition-transform duration-200 hover:scale-[1.03]"
+      >
+        Pesan Lapangan &amp; Gabung Komunitas
+      </Link>
+    </>
   );
 }
 
 export default function PadelShowcase() {
   const root = useRef<HTMLDivElement>(null);
-  const leftCol = useRef<HTMLDivElement>(null);
-  const rightCol = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Pin + parallax hanya di desktop (mouse-scroll). Mobile: layout statis.
+      // Pin + animasi penuh hanya di desktop. Mobile: layout statis.
       if (!window.matchMedia("(min-width: 768px)").matches) return;
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: root.current,
+          trigger: root.current, // .showcase-section
+          pin: true,
           start: "top top",
-          end: "+=130%", // jarak scroll selama section terkunci (pinned)
-          pin: true, // kunci section di layar selama animasi
-          scrub: 1, // sinkron dengan roda mouse (smoothing 1 detik)
+          end: "+=150%",
+          scrub: 1,
+          anticipatePin: 1,
+          snap: {
+            snapTo: (p: number) => (p < 0.2 ? 0 : p > 0.8 ? 1 : 0.5),
+            duration: { min: 0.2, max: 0.5 },
+            ease: "power1.inOut",
+          },
           invalidateOnRefresh: true,
         },
       });
 
-      // Parallax asimetris: kiri bergerak ke ATAS (yPercent negatif),
-      // kanan bergerak ke BAWAH (yPercent positif), magnitudo berbeda.
-      tl.fromTo(leftCol.current, { yPercent: 6 }, { yPercent: -20, ease: "none" }, 0);
-      tl.fromTo(rightCol.current, { yPercent: -14 }, { yPercent: 14, ease: "none" }, 0);
+      // ---- ENTRANCE (0–30%): konten + 4 gambar masuk dari sudut + rotasi ----
+      tl.fromTo(".showcase-content", { opacity: 0.9, y: 30 }, { opacity: 1, y: 0, ease: "power2.out" }, 0);
+      tl.fromTo(".image-top-left", { x: -150, y: -100, rotation: -15, scale: 0.85, opacity: 0.6 }, { x: 0, y: 0, rotation: -8, scale: 1, opacity: 1, ease: "power2.out" }, 0);
+      tl.fromTo(".image-bottom-left", { x: -120, y: 150, rotation: 20, scale: 0.85, opacity: 0.6 }, { x: 0, y: 0, rotation: 12, scale: 1, opacity: 1, ease: "power2.out" }, 0.05);
+      tl.fromTo(".image-top-right", { x: 150, y: -80, rotation: 12, scale: 0.85, opacity: 0.6 }, { x: 0, y: 0, rotation: 6, scale: 1, opacity: 1, ease: "power2.out" }, 0.1);
+      tl.fromTo(".image-bottom-right", { x: 130, y: 120, rotation: -12, scale: 0.85, opacity: 0.6 }, { x: 0, y: 0, rotation: -5, scale: 1, opacity: 1, ease: "power2.out" }, 0.15);
+
+      // ---- PARALLAX (30–70%): gambar bergerak mengelilingi konten (ease none) ----
+      tl.to(".image-top-left", { y: -200, x: -80, rotation: -15, ease: "none" }, 0.3);
+      tl.to(".image-bottom-left", { y: 180, x: -100, rotation: 18, ease: "none" }, 0.3);
+      tl.to(".image-top-right", { y: -180, x: 80, rotation: 10, ease: "none" }, 0.3);
+      tl.to(".image-bottom-right", { y: 200, x: 100, rotation: -10, ease: "none" }, 0.3);
+
+      // ---- EXIT (70–100%): konten fade, gambar menyebar jauh + fade ----
+      tl.to(".showcase-content", { opacity: 0.3, y: -50, ease: "power2.in" }, 0.7);
+      tl.to(".image-top-left", { x: -250, y: -300, opacity: 0.2, scale: 0.8, ease: "power2.in" }, 0.7);
+      tl.to(".image-bottom-left", { x: -200, y: 300, opacity: 0.2, scale: 0.8, ease: "power2.in" }, 0.7);
+      tl.to(".image-top-right", { x: 250, y: -280, opacity: 0.2, scale: 0.8, ease: "power2.in" }, 0.7);
+      tl.to(".image-bottom-right", { x: 220, y: 320, opacity: 0.2, scale: 0.8, ease: "power2.in" }, 0.7);
     }, root);
 
     return () => ctx.revert(); // cleanup → cegah memory leak
@@ -71,45 +95,52 @@ export default function PadelShowcase() {
   return (
     <section
       ref={root}
-      className="relative overflow-hidden bg-white md:h-screen"
+      className="showcase-section relative overflow-hidden bg-white md:h-screen"
     >
-      <div className="mx-auto grid h-full max-w-7xl grid-cols-1 items-center gap-8 px-6 py-20 md:grid-cols-3 md:py-0">
-        {/* Kolom kiri — bergerak ke atas */}
-        <div ref={leftCol} className="flex flex-col gap-6 will-change-transform">
-          {leftPhotos.map((p) => (
-            <PhotoCard key={p.id} src={p.src} alt={p.alt} />
-          ))}
+      {/* DESKTOP — stage radial (konten tengah + 4 gambar sudut absolute) */}
+      <div className="showcase-container relative hidden h-full md:block">
+        {/* Konten tengah (z-index lebih tinggi) — centering di wrapper, animasi di .showcase-content */}
+        <div className="absolute left-1/2 top-1/2 z-20 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 px-6">
+          <div className="showcase-content flex flex-col items-center text-center">
+            <Copy />
+          </div>
         </div>
 
-        {/* Kolom tengah — teks persuasif (statis di tengah saat pinned) */}
-        <div className="order-first flex flex-col items-center text-center md:order-none">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-neon-blue" />
-            Padel Ecosystem
-          </span>
-          <h2 className="mt-4 text-balance text-4xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-5xl">
-            Masuk ke Dalam{" "}
-            <span className="text-gradient-neon">Ekosistem Padel</span> Kami
-          </h2>
-          <p className="mt-5 max-w-md text-balance text-base leading-relaxed text-ink-500">
-            Padel bukan sekadar olahraga, ini adalah tempat di mana kompetisi
-            bertemu dengan koneksi. Mulai dari pemula hingga pemain pro, kami
-            membangun ruang komunitas yang aktif, fasilitas lapangan premium, dan
-            turnamen yang seru. Ambil raketmu, temukan rekan tanding baru, dan
-            mari tumbuh bersama di ekosistem Padel paling dinamis saat ini.
-          </p>
-          <a
-            href="#"
-            className="mt-8 inline-flex cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-neon-purple/25 transition-transform duration-200 hover:scale-[1.03]"
+        {/* 4 gambar sudut */}
+        {corners.map((c) => (
+          <figure
+            key={c.cls}
+            className={`${c.cls} showcase-image absolute ${c.pos} z-10 w-44 will-change-transform lg:w-52`}
           >
-            Pesan Lapangan &amp; Gabung Komunitas
-          </a>
-        </div>
+            <div className="overflow-hidden rounded-2xl shadow-2xl shadow-ink-900/25 ring-1 ring-white/40">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={encodeURI(c.src)}
+                alt="Aksi padel"
+                loading="lazy"
+                className="aspect-[4/5] w-full object-cover"
+              />
+            </div>
+          </figure>
+        ))}
+      </div>
 
-        {/* Kolom kanan — bergerak ke bawah */}
-        <div ref={rightCol} className="flex flex-col gap-6 will-change-transform">
-          {rightPhotos.map((p) => (
-            <PhotoCard key={p.id} src={p.src} alt={p.alt} />
+      {/* MOBILE — statis: konten lalu grid foto (tanpa pin/parallax) */}
+      <div className="px-6 py-20 md:hidden">
+        <div className="flex flex-col items-center text-center">
+          <Copy />
+        </div>
+        <div className="mt-10 grid grid-cols-2 gap-3">
+          {corners.map((c) => (
+            <div key={c.cls} className="overflow-hidden rounded-2xl shadow-lg">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={encodeURI(c.src)}
+                alt="Aksi padel"
+                loading="lazy"
+                className="aspect-[4/5] w-full object-cover"
+              />
+            </div>
           ))}
         </div>
       </div>

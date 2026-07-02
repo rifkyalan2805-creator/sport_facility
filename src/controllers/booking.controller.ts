@@ -17,6 +17,7 @@ export class BookingController {
       userId: req.userId!,
       courtId: body.court_id,
       bookingType: body.booking_type,
+      withLight: body.with_light,
       abonemenId: body.abonemen_id,
       bookingDate: body.booking_date,
       startTime: body.start_time,
