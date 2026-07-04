@@ -18,6 +18,10 @@ import {
   siteSettingRepository,
 } from '../repositories/siteSetting.repository';
 import { PricingRepository, pricingRepository } from '../repositories/pricing.repository';
+import {
+  AbonemenRegistrationRepository,
+  abonemenRegistrationRepository,
+} from '../repositories/abonemenRegistration.repository';
 
 // Status yang masih boleh dibatalkan oleh user.
 const CANCELLABLE: Array<'pending' | 'confirmed'> = ['pending', 'confirmed'];
@@ -29,7 +33,8 @@ export class BookingService {
     private readonly courts: CourtRepository = courtRepository,
     private readonly abonemen: UserAbonemenRepository = userAbonemenRepository,
     private readonly settings: SiteSettingRepository = siteSettingRepository,
-    private readonly pricing: PricingRepository = pricingRepository
+    private readonly pricing: PricingRepository = pricingRepository,
+    private readonly registrations: AbonemenRegistrationRepository = abonemenRegistrationRepository
   ) {}
 
   /**
@@ -66,6 +71,21 @@ export class BookingService {
     }
 
     const duration = durationHours(input.startTime, input.endTime);
+
+    // Gating: tarif abonemen tenis (per-jam, tanpa paket prabayar) hanya boleh
+    // dipakai user yang registrasi abonemennya sudah di-approve admin.
+    if (
+      !input.abonemenId &&
+      input.bookingType === 'abonemen' &&
+      court.type === 'tennis'
+    ) {
+      const approved = await this.registrations.findApprovedForUser(input.userId);
+      if (!approved) {
+        throw AppError.unprocessable(
+          'Tarif abonemen tenis hanya untuk anggota terdaftar. Silakan registrasi abonemen dan tunggu persetujuan admin.'
+        );
+      }
+    }
 
     // Harga per jam dari tabel per-sport (dilewati jika pakai paket prabayar).
     const unitPrice = input.abonemenId

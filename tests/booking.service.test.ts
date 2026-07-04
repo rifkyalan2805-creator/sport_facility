@@ -12,6 +12,7 @@ import { CourtRepository } from '../src/repositories/court.repository';
 import { UserAbonemenRepository } from '../src/repositories/userAbonemen.repository';
 import { SiteSettingRepository } from '../src/repositories/siteSetting.repository';
 import { PricingRepository } from '../src/repositories/pricing.repository';
+import { AbonemenRegistrationRepository } from '../src/repositories/abonemenRegistration.repository';
 import { timeToDate } from '../src/utils/time';
 
 const FUTURE_DATE = '2999-01-04'; // tanggal jauh di masa depan agar lolos cek "tidak boleh lampau"
@@ -54,14 +55,20 @@ const mockPricing = () =>
     deletePadel: jest.fn(),
   } as unknown as jest.Mocked<PricingRepository>);
 
+const mockRegistrations = () =>
+  ({
+    findApprovedForUser: jest.fn().mockResolvedValue(null),
+  } as unknown as jest.Mocked<AbonemenRegistrationRepository>);
+
 function buildService() {
   const bookings = mockBookings();
   const courts = mockCourts();
   const abonemen = mockAbonemen();
   const settings = mockSettings();
   const pricing = mockPricing();
-  const service = new BookingService(bookings, courts, abonemen, settings, pricing);
-  return { service, bookings, courts, abonemen, settings, pricing };
+  const registrations = mockRegistrations();
+  const service = new BookingService(bookings, courts, abonemen, settings, pricing, registrations);
+  return { service, bookings, courts, abonemen, settings, pricing, registrations };
 }
 
 const activeCourt = {
@@ -207,10 +214,11 @@ describe('BookingService.createBooking (harga per-sport)', () => {
   });
 
   it('tenis abonemen tanpa lampu → 145.000/jam (tarif per-jam, bukan paket)', async () => {
-    const { service, courts, bookings, abonemen, pricing } = buildService();
+    const { service, courts, bookings, abonemen, pricing, registrations } = buildService();
     (courts.findActiveById as jest.Mock).mockResolvedValue(tennisCourt);
     (courts.findScheduleForDay as jest.Mock).mockResolvedValue(openSchedule);
     (pricing.listTennis as jest.Mock).mockResolvedValue(tennisRows);
+    (registrations.findApprovedForUser as jest.Mock).mockResolvedValue({ id: 'reg1' });
     (bookings.create as jest.Mock).mockImplementation(async (d) => d);
 
     await service.createBooking({ ...baseInput, bookingType: 'abonemen', withLight: false });
@@ -218,6 +226,19 @@ describe('BookingService.createBooking (harga per-sport)', () => {
     expect(arg.total_price.toString()).toBe('290000'); // 145000 × 2
     expect(arg.abonemen_id).toBeNull();
     expect(abonemen.decrementRemaining).not.toHaveBeenCalled();
+  });
+
+  it('menolak (422) tarif abonemen tenis jika user belum punya registrasi approved', async () => {
+    const { service, courts, bookings, pricing, registrations } = buildService();
+    (courts.findActiveById as jest.Mock).mockResolvedValue(tennisCourt);
+    (courts.findScheduleForDay as jest.Mock).mockResolvedValue(openSchedule);
+    (pricing.listTennis as jest.Mock).mockResolvedValue(tennisRows);
+    (registrations.findApprovedForUser as jest.Mock).mockResolvedValue(null);
+
+    await expect(
+      service.createBooking({ ...baseInput, bookingType: 'abonemen', withLight: false })
+    ).rejects.toMatchObject({ statusCode: 422 });
+    expect(bookings.create).not.toHaveBeenCalled();
   });
 
   it('padel off-peak (08:00) → 150.000/jam', async () => {

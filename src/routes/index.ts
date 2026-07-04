@@ -18,6 +18,7 @@ import reportRoutes from './report.routes';
 import settingRoutes from './setting.routes';
 import cmsRoutes from './cms.routes';
 import pricingRoutes from './pricing.routes';
+import abonemenRoutes from './abonemen.routes';
 
 const router = Router();
 
@@ -41,5 +42,6 @@ router.use('/reports', reportRoutes);
 router.use('/settings', settingRoutes);
 router.use('/cms', cmsRoutes);
 router.use('/pricing', pricingRoutes);
+router.use('/abonemen', abonemenRoutes);
 
 export default router;
