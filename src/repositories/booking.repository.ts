@@ -49,6 +49,18 @@ export class BookingRepository {
     `;
   }
 
+  /** Booking aktif (memakai slot) pada satu court + tanggal — untuk hitung ketersediaan. */
+  findActiveByCourtDate(courtId: string, bookingDate: string, db: DbClient = prisma) {
+    return db.bookings.findMany({
+      where: {
+        court_id: courtId,
+        booking_date: new Date(bookingDate),
+        status: { in: ACTIVE_STATUSES },
+      },
+      select: { start_time: true, end_time: true },
+    });
+  }
+
   create(data: Prisma.bookingsUncheckedCreateInput, db: DbClient = prisma) {
     return db.bookings.create({ data });
   }

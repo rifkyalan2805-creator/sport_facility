@@ -15,15 +15,23 @@ export default function HargaPadelPage() {
           Harga &amp; Jadwal <span className="text-gradient-neon">Padel</span>
         </h1>
         <p className="mt-4 max-w-md text-ink-500">
-          Jadwal ketersediaan lapangan padel dan harga (normal &amp; off-peak
-          06:00–15:00) sedang disiapkan dan akan hadir di halaman ini.
+          Pilih lapangan, tanggal, dan slot waktu. Harga off-peak (06:00–15:00)
+          otomatis lebih hemat.
         </p>
-        <Link
-          href="/"
-          className="mt-8 inline-flex cursor-pointer items-center justify-center rounded-full border border-ink-900/15 px-6 py-3 text-sm font-medium text-ink-700 transition-colors duration-200 hover:bg-ink-900/5"
-        >
-          ← Kembali ke Beranda
-        </Link>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/booking/padel"
+            className="inline-flex cursor-pointer items-center justify-center rounded-full bg-ink-900 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-neon-pink"
+          >
+            Booking Lapangan Padel →
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex cursor-pointer items-center justify-center rounded-full border border-ink-900/15 px-6 py-3 text-sm font-medium text-ink-700 transition-colors duration-200 hover:bg-ink-900/5"
+          >
+            ← Kembali ke Beranda
+          </Link>
+        </div>
       </main>
       <Footer />
     </>

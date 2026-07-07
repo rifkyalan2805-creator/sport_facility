@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { apiGet } from "./api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiGet, apiPatch } from "./api";
 
 // Tipe ringkas sesuai respons backend (bisa diperluas nanti).
 export interface MembershipPlan {
@@ -19,6 +19,39 @@ export interface Court {
   type: string;
   price_per_hour: string;
   is_indoor: boolean;
+  image_url: string | null;
+  description: string | null;
+  facilities: string[];
+}
+
+// Slot ketersediaan (GET /courts/:id/availability?date=)
+export interface Slot {
+  id: string;
+  start: string; // "12:00"
+  end: string; // "13:00"
+  durationMin: number;
+  basePrice: number;
+  price: number;
+  status: "available" | "booked";
+}
+
+export interface AvailabilityResult {
+  date: string;
+  closed: boolean;
+  slots: Slot[];
+}
+
+// Booking milik user (GET /bookings) — sudah include ringkasan court.
+export interface Booking {
+  id: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  duration_hours: string;
+  total_price: string;
+  status: "pending" | "confirmed" | "checked_in" | "completed" | "cancelled";
+  booking_type: string;
+  courts?: { name: string; code: string } | null;
 }
 
 export interface EventItem {
@@ -42,6 +75,47 @@ export function useCourts() {
   return useQuery({
     queryKey: ["courts"],
     queryFn: () => apiGet<Court[]>("/courts"),
+  });
+}
+
+// Hanya lapangan padel (type 'paddle' di backend).
+export function usePadelCourts() {
+  return useQuery({
+    queryKey: ["courts", "padel"],
+    queryFn: async () => {
+      const all = await apiGet<Court[]>("/courts");
+      return all.filter((c) => c.type === "paddle");
+    },
+  });
+}
+
+// Jadwal slot 1 court untuk 1 tanggal. Refetch tiap court/tanggal berubah.
+export function useAvailability(courtId: string | null, date: string) {
+  return useQuery({
+    queryKey: ["availability", courtId, date],
+    queryFn: () =>
+      apiGet<AvailabilityResult>(
+        `/courts/${courtId}/availability?date=${date}`,
+      ),
+    enabled: Boolean(courtId) && Boolean(date),
+  });
+}
+
+// Daftar booking milik user yang login (butuh token — dipakai di dashboard).
+export function useMyBookings() {
+  return useQuery({
+    queryKey: ["my-bookings"],
+    queryFn: () => apiGet<Booking[]>("/bookings?limit=50"),
+  });
+}
+
+// Batalkan booking (pending/confirmed) → refresh daftar setelahnya.
+export function useCancelBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiPatch(`/bookings/${id}/cancel`, { reason: "Dibatalkan oleh user" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-bookings"] }),
   });
 }
 

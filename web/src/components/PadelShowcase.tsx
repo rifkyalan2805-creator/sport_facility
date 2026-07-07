@@ -34,7 +34,7 @@ function Copy() {
         tumbuh bersama di ekosistem Padel paling dinamis saat ini.
       </p>
       <Link
-        href="/harga/padel"
+        href="/booking/padel"
         className="mt-6 inline-flex cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-neon-purple/25 transition-transform duration-200 hover:scale-[1.03]"
       >
         Pesan Lapangan &amp; Gabung Komunitas

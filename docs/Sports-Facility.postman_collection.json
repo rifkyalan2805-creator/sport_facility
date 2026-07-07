@@ -7,25 +7,79 @@
   },
   "auth": {
     "type": "bearer",
-    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:3000/api/v1", "type": "string" },
-    { "key": "token", "value": "", "type": "string" },
-    { "key": "refresh_token", "value": "", "type": "string" },
-    { "key": "court_id", "value": "", "type": "string" },
-    { "key": "booking_id", "value": "", "type": "string" },
-    { "key": "package_id", "value": "", "type": "string" },
-    { "key": "registration_id", "value": "", "type": "string" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "court_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "booking_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "package_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "registration_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "payment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "today",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
     {
       "name": "Health",
       "request": {
-        "auth": { "type": "noauth" },
+        "auth": {
+          "type": "noauth"
+        },
         "method": "GET",
         "header": [],
-        "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
       }
     },
     {
@@ -49,14 +103,30 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"rifky@test.com\",\n  \"phone\": \"081234567890\",\n  \"full_name\": \"Rifky Alan\",\n  \"password\": \"password123\"\n}"
             },
-            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
           }
         },
         {
@@ -78,14 +148,30 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"rifky@test.com\",\n  \"password\": \"password123\"\n}"
             },
-            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
           }
         },
         {
@@ -93,7 +179,16 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
           }
         },
         {
@@ -114,27 +209,59 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
             },
-            "url": { "raw": "{{base_url}}/auth/refresh", "host": ["{{base_url}}"], "path": ["auth", "refresh"] }
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
           }
         },
         {
           "name": "Logout",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
             },
-            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
           }
         }
       ]
@@ -159,28 +286,86 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/courts", "host": ["{{base_url}}"], "path": ["courts"] }
+            "url": {
+              "raw": "{{base_url}}/courts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "courts"
+              ]
+            }
           }
         },
         {
           "name": "Get Court by ID (publik)",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/courts/{{court_id}}", "host": ["{{base_url}}"], "path": ["courts", "{{court_id}}"] }
+            "url": {
+              "raw": "{{base_url}}/courts/{{court_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "courts",
+                "{{court_id}}"
+              ]
+            }
           }
         },
         {
           "name": "List Court Schedules (publik)",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/courts/{{court_id}}/schedules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "courts",
+                "{{court_id}}",
+                "schedules"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Court Availability (publik)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('today', new Date().toISOString().slice(0,10));"
+                ]
+              }
+            }
+          ],
+          "request": {
             "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/courts/{{court_id}}/schedules", "host": ["{{base_url}}"], "path": ["courts", "{{court_id}}", "schedules"] }
+            "url": {
+              "raw": "{{base_url}}/courts/{{court_id}}/availability?date={{today}}",
+              "host": ["{{base_url}}"],
+              "path": ["courts", "{{court_id}}", "availability"],
+              "query": [{ "key": "date", "value": "{{today}}" }]
+            }
           }
         }
       ]
@@ -191,34 +376,72 @@
         {
           "name": "Get Pricing (publik)",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/pricing", "host": ["{{base_url}}"], "path": ["pricing"] }
+            "url": {
+              "raw": "{{base_url}}/pricing",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pricing"
+              ]
+            }
           }
         },
         {
           "name": "Create Tennis Price (admin)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"booking_type\": \"insidentil\",\n  \"with_light\": true,\n  \"price\": 175000,\n  \"is_active\": true,\n  \"sort_order\": 1\n}"
             },
-            "url": { "raw": "{{base_url}}/pricing/tennis", "host": ["{{base_url}}"], "path": ["pricing", "tennis"] }
+            "url": {
+              "raw": "{{base_url}}/pricing/tennis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pricing",
+                "tennis"
+              ]
+            }
           }
         },
         {
           "name": "Create Padel Price (admin)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"label\": \"off_peak\",\n  \"price\": 150000,\n  \"time_start\": \"06:00\",\n  \"time_end\": \"15:00\",\n  \"is_active\": true,\n  \"sort_order\": 2\n}"
             },
-            "url": { "raw": "{{base_url}}/pricing/padel", "host": ["{{base_url}}"], "path": ["pricing", "padel"] }
+            "url": {
+              "raw": "{{base_url}}/pricing/padel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pricing",
+                "padel"
+              ]
+            }
           }
         }
       ]
@@ -243,10 +466,21 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/abonemen/packages", "host": ["{{base_url}}"], "path": ["abonemen", "packages"] }
+            "url": {
+              "raw": "{{base_url}}/abonemen/packages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abonemen",
+                "packages"
+              ]
+            }
           }
         },
         {
@@ -267,12 +501,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"package_id\": \"{{package_id}}\",\n  \"full_name\": \"Rifky Alan\",\n  \"phone\": \"081234567890\",\n  \"communication_email\": \"rifky@gmail.com\",\n  \"notes\": \"Mohon dihubungi via email untuk invoice\"\n}"
             },
-            "url": { "raw": "{{base_url}}/abonemen/registrations", "host": ["{{base_url}}"], "path": ["abonemen", "registrations"] }
+            "url": {
+              "raw": "{{base_url}}/abonemen/registrations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abonemen",
+                "registrations"
+              ]
+            }
           }
         },
         {
@@ -280,7 +528,17 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/abonemen/registrations/me", "host": ["{{base_url}}"], "path": ["abonemen", "registrations", "me"] }
+            "url": {
+              "raw": "{{base_url}}/abonemen/registrations/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abonemen",
+                "registrations",
+                "me"
+              ]
+            }
           }
         },
         {
@@ -290,12 +548,26 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/abonemen/registrations?status=pending&page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["abonemen", "registrations"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abonemen",
+                "registrations"
+              ],
               "query": [
-                { "key": "status", "value": "pending" },
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+                {
+                  "key": "status",
+                  "value": "pending"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
               ]
             }
           }
@@ -304,12 +576,28 @@
           "name": "Review Registration (admin)",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"action\": \"approve\",\n  \"notes\": \"Disetujui\"\n}"
             },
-            "url": { "raw": "{{base_url}}/abonemen/registrations/{{registration_id}}/review", "host": ["{{base_url}}"], "path": ["abonemen", "registrations", "{{registration_id}}", "review"] }
+            "url": {
+              "raw": "{{base_url}}/abonemen/registrations/{{registration_id}}/review",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "abonemen",
+                "registrations",
+                "{{registration_id}}",
+                "review"
+              ]
+            }
           }
         }
       ]
@@ -335,12 +623,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"court_id\": \"{{court_id}}\",\n  \"booking_type\": \"insidentil\",\n  \"with_light\": true,\n  \"booking_date\": \"2026-07-10\",\n  \"start_time\": \"08:00\",\n  \"end_time\": \"10:00\",\n  \"notes\": \"Test dari Postman\"\n}"
             },
-            "url": { "raw": "{{base_url}}/bookings", "host": ["{{base_url}}"], "path": ["bookings"] }
+            "url": {
+              "raw": "{{base_url}}/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
           }
         },
         {
@@ -350,11 +651,21 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/bookings?page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["bookings"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
               ]
             }
           }
@@ -364,19 +675,43 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/bookings/{{booking_id}}", "host": ["{{base_url}}"], "path": ["bookings", "{{booking_id}}"] }
+            "url": {
+              "raw": "{{base_url}}/bookings/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                "{{booking_id}}"
+              ]
+            }
           }
         },
         {
           "name": "Cancel Booking",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reason\": \"Batal, ada halangan\"\n}"
             },
-            "url": { "raw": "{{base_url}}/bookings/{{booking_id}}/cancel", "host": ["{{base_url}}"], "path": ["bookings", "{{booking_id}}", "cancel"] }
+            "url": {
+              "raw": "{{base_url}}/bookings/{{booking_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                "{{booking_id}}",
+                "cancel"
+              ]
+            }
           }
         },
         {
@@ -384,7 +719,102 @@
           "request": {
             "method": "PATCH",
             "header": [],
-            "url": { "raw": "{{base_url}}/bookings/{{booking_id}}/check-in", "host": ["{{base_url}}"], "path": ["bookings", "{{booking_id}}", "check-in"] }
+            "url": {
+              "raw": "{{base_url}}/bookings/{{booking_id}}/check-in",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                "{{booking_id}}",
+                "check-in"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Payment (booking)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.id) { pm.collectionVariables.set('payment_id', res.data.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"item_type\": \"booking\",\n      \"item_id\": \"{{booking_id}}\",\n      \"item_name\": \"Padel booking\",\n      \"quantity\": 1,\n      \"unit_price\": 150000\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{base_url}}/payments", "host": ["{{base_url}}"], "path": ["payments"] }
+          }
+        },
+        {
+          "name": "Simulate Success (DUMMY)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}/simulate/success",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}", "simulate", "success"]
+            }
+          }
+        },
+        {
+          "name": "Simulate Failure (DUMMY)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Disimulasikan gagal\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}/simulate/failure",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}", "simulate", "failure"]
+            }
+          }
+        },
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["payments"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            }
           }
         }
       ]

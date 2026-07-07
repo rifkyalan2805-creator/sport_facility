@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { courtController } from '../controllers/court.controller';
+import { availabilityController } from '../controllers/availability.controller';
 import { requireAuth, requireRole } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import {
@@ -9,6 +10,7 @@ import {
   setScheduleSchema,
   updateCourtSchema,
 } from '../validators/court.validator';
+import { availabilityQuerySchema } from '../validators/availability.validator';
 
 const router = Router();
 
@@ -57,6 +59,26 @@ router.post('/', ...adminOnly, validate(createCourtSchema, 'body'), courtControl
  *     responses: { 200: { description: Court dinonaktifkan } }
  */
 router.get('/:id', validate(courtIdParamSchema, 'params'), courtController.getById);
+
+/**
+ * @openapi
+ * /api/v1/courts/{id}/availability:
+ *   get:
+ *     tags: [Courts]
+ *     summary: Jadwal ketersediaan slot 1 court untuk 1 tanggal (publik)
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+ *       - { in: query, name: date, required: true, schema: { type: string, example: "2026-07-10" } }
+ *     responses:
+ *       200: { description: "{ date, closed, slots: [] }" }
+ *       404: { description: Court tidak ditemukan }
+ */
+router.get(
+  '/:id/availability',
+  validate(courtIdParamSchema, 'params'),
+  validate(availabilityQuerySchema, 'query'),
+  availabilityController.get
+);
 router.patch(
   '/:id',
   ...adminOnly,
