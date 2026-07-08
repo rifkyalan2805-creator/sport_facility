@@ -14,6 +14,9 @@ interface CourtCardProps {
   onHover: (index: number) => void; // parent koordinasikan flexGrow saudara kartu
   onLeave: () => void;
   registerRef: (index: number, node: HTMLElement | null) => void;
+  sportLabel?: string; // "Padel" | "Tenis"
+  priceFrom?: number | string; // tarif "mulai dari"; tenis pakai tennis_prices, bukan price_per_hour
+  defaultSurface?: string;
 }
 
 export default function CourtCard({
@@ -25,6 +28,9 @@ export default function CourtCard({
   onHover,
   onLeave,
   registerRef,
+  sportLabel = "Padel",
+  priceFrom,
+  defaultSurface = "Rumput sintetis",
 }: CourtCardProps) {
   const cardRef = useRef<HTMLElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -72,7 +78,8 @@ export default function CourtCard({
     };
   }, [animated, index, onHover, onLeave]);
 
-  const surface = court.description ?? "Rumput sintetis";
+  const surface = court.description ?? defaultSurface;
+  const fromPrice = priceFrom ?? court.price_per_hour;
 
   return (
     <article
@@ -117,7 +124,7 @@ export default function CourtCard({
       {/* Nama court selalu tampak */}
       <div className="absolute left-5 top-5 pr-4">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-white/70">
-          {court.is_indoor ? "Indoor" : "Outdoor"} · Padel
+          {court.is_indoor ? "Indoor" : "Outdoor"} · {sportLabel}
         </p>
         <h3 className="mt-1 text-2xl font-semibold text-white drop-shadow">{court.name}</h3>
       </div>
@@ -138,7 +145,7 @@ export default function CourtCard({
           </div>
         ) : null}
         <p className="mt-3 text-sm text-white/70">
-          Mulai <span className="font-semibold text-white">{formatRupiah(court.price_per_hour)}</span>/jam
+          Mulai <span className="font-semibold text-white">{formatRupiah(fromPrice)}</span>/jam
         </p>
         {/* Affordance visual (bukan tombol nyata → hindari nested interactive).
             Warna berubah via CSS transition saat hover kartu, bukan GSAP. */}

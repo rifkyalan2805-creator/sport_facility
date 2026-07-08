@@ -385,11 +385,46 @@
             "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
+            "description": "Slot per jam. `booking_type` & `with_light` HANYA berpengaruh untuk lapangan TENIS (harga dari tennis_prices: insidentil/abonemen x lampu). Padel mengabaikannya (off-peak by jam). Nilai with_light harus persis \"true\" atau \"false\".",
             "url": {
-              "raw": "{{base_url}}/courts/{{court_id}}/availability?date={{today}}",
+              "raw": "{{base_url}}/courts/{{court_id}}/availability?date={{today}}&booking_type=insidentil&with_light=true",
               "host": ["{{base_url}}"],
               "path": ["courts", "{{court_id}}", "availability"],
-              "query": [{ "key": "date", "value": "{{today}}" }]
+              "query": [
+                { "key": "date", "value": "{{today}}" },
+                { "key": "booking_type", "value": "insidentil", "description": "insidentil | abonemen (tenis)" },
+                { "key": "with_light", "value": "true", "description": "true | false (tenis)" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Court Availability — Tenis abonemen tanpa lampu",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('today', new Date().toISOString().slice(0,10));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "description": "Set {{court_id}} ke lapangan TENIS. Harga slot jadi Rp145.000 (dicoret dari Rp155.000).",
+            "url": {
+              "raw": "{{base_url}}/courts/{{court_id}}/availability?date={{today}}&booking_type=abonemen&with_light=false",
+              "host": ["{{base_url}}"],
+              "path": ["courts", "{{court_id}}", "availability"],
+              "query": [
+                { "key": "date", "value": "{{today}}" },
+                { "key": "booking_type", "value": "abonemen" },
+                { "key": "with_light", "value": "false" }
+              ]
             }
           }
         }

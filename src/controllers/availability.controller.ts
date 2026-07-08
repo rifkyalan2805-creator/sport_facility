@@ -15,7 +15,10 @@ export class AvailabilityController {
 
   get = catchAsync(async (req: Request, res: Response) => {
     const q = req.query as unknown as AvailabilityQuery;
-    const data = await this.service.getAvailability(req.params.id, q.date);
+    const data = await this.service.getAvailability(req.params.id, q.date, {
+      bookingType: q.booking_type,
+      withLight: q.with_light,
+    });
     res.status(HttpStatus.OK).json({ success: true, data });
   });
 }

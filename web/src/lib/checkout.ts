@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { apiPost } from "./api";
+import { getErrorMessage } from "./error";
 import type { Slot } from "./queries";
 
 // ---- Kontrak generik dipakai CheckoutPanel & semua runner mode ----
@@ -57,21 +58,31 @@ interface PaymentResponse {
   invoices?: { invoice_number: string } | null;
 }
 
+/** Tarif yang memengaruhi harga booking (tenis). Padel memakai default. */
+export interface BookingTariff {
+  bookingType?: "insidentil" | "abonemen";
+  withLight?: boolean;
+}
+
 /**
  * Fase 1 — buat 1 booking per slot (paralel, toleran sebagian gagal karena 409).
  * Dipisah dari pembayaran agar retry pembayaran TIDAK membuat booking ganda.
+ *
+ * Bila SEMUA gagal, pesan backend dari kegagalan pertama diteruskan apa adanya
+ * (mis. 422 gating abonemen tenis), bukan ditimpa pesan generik.
  */
 export async function createBookings(
   courtId: string,
   date: string,
   slots: Slot[],
+  tariff: BookingTariff = {},
 ): Promise<CreateBookingsResult> {
   const settled = await Promise.allSettled(
     slots.map((s) =>
       apiPost<BookingCreated>("/bookings", {
         court_id: courtId,
-        booking_type: "insidentil",
-        with_light: true,
+        booking_type: tariff.bookingType ?? "insidentil",
+        with_light: tariff.withLight ?? true,
         booking_date: date,
         start_time: s.start,
         end_time: s.end,
@@ -84,8 +95,14 @@ export async function createBookings(
     .map((r) => r.value);
 
   if (!bookings.length) {
+    const rejected = settled.find((r) => r.status === "rejected") as
+      | PromiseRejectedResult
+      | undefined;
     throw new Error(
-      "Semua slot gagal dibooking (kemungkinan sudah dipesan). Silakan pilih slot lain.",
+      getErrorMessage(
+        rejected?.reason,
+        "Semua slot gagal dibooking (kemungkinan sudah dipesan). Silakan pilih slot lain.",
+      ),
     );
   }
 
@@ -141,38 +158,44 @@ export async function settlePayment(
 }
 
 /**
- * Runner mode PADEL: booking dibuat SEKALI (retry aman, di-cache di closure) →
- * payment baru tiap percobaan → settle. Dipakai oleh CheckoutPanel generik.
+ * Runner booking LAPANGAN (padel & tenis): booking dibuat SEKALI
+ * (retry aman, di-cache di closure) → payment baru tiap percobaan → settle.
+ * `bookingType`/`withLight` hanya berpengaruh untuk tenis.
  */
-export function makePadelRunner(opts: {
+export function makeCourtRunner(opts: {
   court: { id: string; name: string };
   date: string;
   slots: Slot[];
   qc: QueryClient;
   onConsumed: () => void;
+  tariff?: BookingTariff;
 }): CheckoutRunner {
-  const { court, date, slots, qc, onConsumed } = opts;
+  const { court, date, slots, qc, onConsumed, tariff } = opts;
   let bookings: CreatedBooking[] | null = null;
   let failedCount = 0;
 
   return async (outcome) => {
-    if (!bookings) {
-      const res = await createBookings(court.id, date, slots);
-      bookings = res.bookings;
-      failedCount = res.failedCount;
-      onConsumed();
+    try {
+      if (!bookings) {
+        const res = await createBookings(court.id, date, slots, tariff);
+        bookings = res.bookings;
+        failedCount = res.failedCount;
+        onConsumed();
+      }
+      const info = await createPayment(bookings, court.name, date);
+      const settled = await settlePayment(info.paymentId, outcome);
+      return {
+        status: settled.status,
+        invoiceNumber: settled.invoiceNumber,
+        referenceId: settled.referenceId,
+        finalAmount: settled.finalAmount,
+        confirmedCount: bookings.length,
+        failedCount,
+      };
+    } finally {
+      // Refresh apa pun hasilnya: 409 slot bentrok / 422 gating → grid slot ikut segar.
       qc.invalidateQueries({ queryKey: ["availability", court.id, date] });
+      qc.invalidateQueries({ queryKey: ["my-bookings"] });
     }
-    const info = await createPayment(bookings, court.name, date);
-    const settled = await settlePayment(info.paymentId, outcome);
-    qc.invalidateQueries({ queryKey: ["my-bookings"] });
-    return {
-      status: settled.status,
-      invoiceNumber: settled.invoiceNumber,
-      referenceId: settled.referenceId,
-      finalAmount: settled.finalAmount,
-      confirmedCount: bookings.length,
-      failedCount,
-    };
   };
 }

@@ -1,3 +1,4 @@
+import { booking_type } from '@prisma/client';
 import { AppError } from '../utils/AppError';
 import { dateToTime, toMinutes } from '../utils/time';
 import { CourtRepository, courtRepository } from '../repositories/court.repository';
@@ -9,9 +10,15 @@ export interface AvailabilitySlot {
   start: string; // "HH:mm"
   end: string; // "HH:mm"
   durationMin: number;
-  basePrice: number; // harga normal (dicoret bila ada diskon)
-  price: number; // harga berlaku (off-peak bila cocok)
+  basePrice: number; // harga referensi (dicoret bila harga berlaku lebih murah)
+  price: number; // harga berlaku
   status: 'available' | 'booked';
+}
+
+/** Pilihan yang memengaruhi harga (tenis). Padel mengabaikannya. */
+export interface AvailabilityOptions {
+  bookingType?: booking_type; // default 'insidentil'
+  withLight?: boolean; // default true
 }
 
 export interface AvailabilityResult {
@@ -32,7 +39,10 @@ function fromMinutes(total: number): string {
 /**
  * AvailabilityService — menyusun jadwal slot 1 court untuk 1 tanggal:
  * jam operasional (court_schedules) → slot per jam, harga per-sport
- * (padel_prices off-peak/normal), dan status booked (bookings aktif + slot lampau).
+ * (padel: padel_prices off-peak/normal; tenis: tennis_prices booking_type × lampu),
+ * dan status booked (bookings aktif + slot lampau).
+ *
+ * Harga di sini WAJIB konsisten dengan BookingService.resolveUnitPrice.
  */
 export class AvailabilityService {
   constructor(
@@ -41,7 +51,14 @@ export class AvailabilityService {
     private readonly pricing: PricingRepository = pricingRepository
   ) {}
 
-  async getAvailability(courtId: string, dateStr: string): Promise<AvailabilityResult> {
+  async getAvailability(
+    courtId: string,
+    dateStr: string,
+    opts: AvailabilityOptions = {}
+  ): Promise<AvailabilityResult> {
+    const bookingType: booking_type = opts.bookingType ?? 'insidentil';
+    const withLight = opts.withLight ?? true;
+
     const court = await this.courts.findActiveById(courtId);
     if (!court) throw AppError.notFound('Court tidak ditemukan atau tidak aktif');
 
@@ -54,10 +71,30 @@ export class AvailabilityService {
     const open = dateToTime(schedule.open_time);
     const close = dateToTime(schedule.close_time);
 
-    // Harga: padel pakai padel_prices (normal + off-peak); lainnya fallback court.
-    const padelRows = court.type === 'paddle' ? await this.pricing.listPadel() : [];
-    const normalRow = padelRows.find((r) => r.is_active && (!r.time_start || !r.time_end));
-    const basePrice = normalRow ? Number(normalRow.price) : Number(court.price_per_hour);
+    // Harga per-sport. Padel: padel_prices (normal + off-peak).
+    // Tenis: tennis_prices (booking_type × lampu); basePrice = tarif INSIDENTIL
+    // pada setting lampu yang sama → coret-harga bermakna saat abonemen.
+    const isPadel = court.type === 'paddle';
+    const isTennis = court.type === 'tennis';
+
+    const padelRows = isPadel ? await this.pricing.listPadel() : [];
+    const tennisRows = isTennis ? await this.pricing.listTennis() : [];
+
+    let basePrice = Number(court.price_per_hour); // fallback
+    let tennisPrice = basePrice;
+
+    if (isPadel) {
+      const normalRow = padelRows.find((r) => r.is_active && (!r.time_start || !r.time_end));
+      if (normalRow) basePrice = Number(normalRow.price);
+    } else if (isTennis) {
+      const findRow = (bt: booking_type, wl: boolean) =>
+        tennisRows.find((r) => r.is_active && r.booking_type === bt && r.with_light === wl);
+
+      const chosen = findRow(bookingType, withLight);
+      const reference = findRow('insidentil', withLight);
+      if (chosen) tennisPrice = Number(chosen.price);
+      basePrice = reference ? Number(reference.price) : tennisPrice;
+    }
 
     // Booking aktif pada tanggal ini → tandai slot yang sudah dipesan.
     const booked = await this.bookings.findActiveByCourtDate(courtId, dateStr);
@@ -85,7 +122,7 @@ export class AvailabilityService {
       const end = fromMinutes(m + SLOT_MINUTES);
 
       let price = basePrice;
-      if (court.type === 'paddle') {
+      if (isPadel) {
         const offPeak = padelRows.find(
           (r) =>
             r.is_active &&
@@ -95,6 +132,8 @@ export class AvailabilityService {
             start < dateToTime(r.time_end)
         );
         if (offPeak) price = Number(offPeak.price);
+      } else if (isTennis) {
+        price = tennisPrice; // konstan sepanjang hari; ditentukan booking_type × lampu
       }
 
       const isBooked = bookedRanges.some((r) => r.start < end && r.end > start);

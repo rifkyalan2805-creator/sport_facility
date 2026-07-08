@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePadelCourts, useAvailability, type Slot } from "@/lib/queries";
 import { buildDatePills } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
-import { makePadelRunner, type CheckoutRunner, type CheckoutLine } from "@/lib/checkout";
+import { makeCourtRunner, type CheckoutRunner, type CheckoutLine } from "@/lib/checkout";
 import CourtCard from "./CourtCard";
 import DatePicker from "./DatePicker";
 import ScheduleGrid from "./ScheduleGrid";
@@ -123,7 +123,7 @@ export default function PadelBooking() {
       router.push("/login?redirect=/booking/padel");
       return;
     }
-    runnerRef.current = makePadelRunner({
+    runnerRef.current = makeCourtRunner({
       court: { id: selectedCourt.id, name: selectedCourt.name },
       date: selectedDate,
       slots: chosen,

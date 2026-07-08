@@ -111,7 +111,7 @@ export default function SpreadHero() {
             bagian dari komunitas kami.
           </p>
           <Link
-            href="/harga/tenis"
+            href="/booking/tennis"
             className="mt-8 inline-flex cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-neon-purple via-neon-pink to-neon-blue px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-neon-purple/25 transition-transform duration-200 hover:scale-[1.03]"
           >
             Booking Lapangan &amp; Cari Teman Sparring

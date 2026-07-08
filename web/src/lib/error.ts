@@ -5,6 +5,8 @@ import axios from "axios";
  * - Tidak ada response (backend mati / jaringan) → pesan koneksi.
  * - Ada response → pakai `message` dari backend (sudah spesifik per kasus,
  *   mis. 401 "Email atau password salah", 403 "Akun tidak aktif").
+ * - Error biasa (mis. dilempar manual dari lib/checkout) → pakai pesannya,
+ *   jangan ditelan jadi fallback generik.
  */
 export function getErrorMessage(
   err: unknown,
@@ -17,5 +19,6 @@ export function getErrorMessage(
     const data = err.response.data as { message?: string } | undefined;
     return data?.message ?? fallback;
   }
+  if (err instanceof Error && err.message) return err.message;
   return fallback;
 }

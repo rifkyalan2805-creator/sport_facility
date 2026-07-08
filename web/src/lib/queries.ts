@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPatch } from "./api";
+import { apiGet, apiPatch, apiPost } from "./api";
 import type { DiscountTier } from "./groupDiscount";
 
 // Tipe ringkas sesuai respons backend (bisa diperluas nanti).
@@ -90,13 +90,54 @@ export function usePadelCourts() {
   });
 }
 
-// Jadwal slot 1 court untuk 1 tanggal. Refetch tiap court/tanggal berubah.
-export function useAvailability(courtId: string | null, date: string) {
+export function useTennisCourts() {
   return useQuery({
-    queryKey: ["availability", courtId, date],
+    queryKey: ["courts", "tennis"],
+    queryFn: async () => {
+      const all = await apiGet<Court[]>("/courts");
+      return all.filter((c) => c.type === "tennis");
+    },
+  });
+}
+
+// Matriks tarif tenis (booking_type × lampu) dari GET /pricing.
+export interface TennisPrice {
+  id: string;
+  booking_type: "insidentil" | "abonemen";
+  with_light: boolean;
+  price: string;
+  is_active: boolean;
+}
+
+export function useTennisPrices() {
+  return useQuery({
+    queryKey: ["pricing", "tennis"],
+    queryFn: async () => {
+      const all = await apiGet<{ tennis: TennisPrice[] }>("/pricing");
+      return (all.tennis ?? []).filter((t) => t.is_active);
+    },
+  });
+}
+
+/**
+ * Jadwal slot 1 court untuk 1 tanggal. Refetch tiap court/tanggal/tarif berubah.
+ *
+ * `bookingType` & `withLight` hanya berpengaruh untuk TENIS (tennis_prices);
+ * padel mengabaikannya. Elemen key ditambahkan di BELAKANG agar invalidasi
+ * dengan prefix ["availability", courtId, date] tetap cocok.
+ */
+export function useAvailability(
+  courtId: string | null,
+  date: string,
+  opts?: { bookingType?: "insidentil" | "abonemen"; withLight?: boolean },
+) {
+  const bookingType = opts?.bookingType ?? "insidentil";
+  const withLight = opts?.withLight ?? true;
+  return useQuery({
+    queryKey: ["availability", courtId, date, bookingType, withLight],
     queryFn: () =>
       apiGet<AvailabilityResult>(
-        `/courts/${courtId}/availability?date=${date}`,
+        `/courts/${courtId}/availability?date=${date}&booking_type=${bookingType}&with_light=${withLight}`,
       ),
     enabled: Boolean(courtId) && Boolean(date),
   });
@@ -169,6 +210,64 @@ export function useCancelMembership() {
   return useMutation({
     mutationFn: (id: string) => apiPatch(`/membership/${id}/cancel`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-memberships"] }),
+  });
+}
+
+// ---- Abonemen tenis: paket & registrasi ----
+export interface AbonemenPackage {
+  id: string;
+  name: string;
+  description: string | null;
+  sessions_per_week: number;
+  duration_weeks: number;
+  price: string;
+}
+
+export function useAbonemenPackages() {
+  return useQuery({
+    queryKey: ["abonemen-packages"],
+    queryFn: () => apiGet<AbonemenPackage[]>("/abonemen/packages"),
+  });
+}
+
+export interface AbonemenRegistration {
+  id: string;
+  full_name: string;
+  phone: string;
+  communication_email: string;
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  notes: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  abonemen_packages?: { id: string; name: string; price: string } | null;
+}
+
+/**
+ * Registrasi abonemen milik user. `enabled` dipakai agar tidak memanggil
+ * endpoint ber-auth saat user belum login (mis. di wizard tenis yang publik).
+ */
+export function useMyAbonemenRegistrations(enabled = true) {
+  return useQuery({
+    queryKey: ["my-abonemen-registrations"],
+    queryFn: () => apiGet<AbonemenRegistration[]>("/abonemen/registrations/me"),
+    enabled,
+  });
+}
+
+export interface CreateRegistrationBody {
+  package_id: string;
+  full_name: string;
+  phone: string;
+  communication_email: string;
+  notes?: string;
+}
+
+export function useCreateAbonemenRegistration() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreateRegistrationBody) =>
+      apiPost<AbonemenRegistration>("/abonemen/registrations", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-abonemen-registrations"] }),
   });
 }
 
