@@ -101,7 +101,7 @@ export default function SwimmingShowcase() {
             bersama kami.
           </p>
           <Link
-            href="/harga/pool"
+            href="/booking/pool"
             className="mt-8 inline-flex cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-neon-blue/25 transition-transform duration-200 hover:scale-[1.03]"
           >
             Daftar Member &amp; Mulai Berenang

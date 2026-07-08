@@ -60,6 +60,31 @@
       "key": "today",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticket_type_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pool_ticket_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "plan_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "membership_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -814,6 +839,192 @@
               "raw": "{{base_url}}/payments/{{payment_id}}",
               "host": ["{{base_url}}"],
               "path": ["payments", "{{payment_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pool",
+      "item": [
+        {
+          "name": "List Sessions (publik)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.length) { pm.collectionVariables.set('session_id', res.data[0].id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/pool/sessions", "host": ["{{base_url}}"], "path": ["pool", "sessions"] }
+          }
+        },
+        {
+          "name": "List Ticket Types (publik)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.length) { pm.collectionVariables.set('ticket_type_id', res.data[0].id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/pool/ticket-types", "host": ["{{base_url}}"], "path": ["pool", "ticket-types"] }
+          }
+        },
+        {
+          "name": "Checkout Grup (diskon otomatis)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data) {",
+                  "  if (res.data.payment) pm.collectionVariables.set('payment_id', res.data.payment.id);",
+                  "  if (res.data.tickets && res.data.tickets.length) pm.collectionVariables.set('pool_ticket_id', res.data.tickets[0].id);",
+                  "  console.log('Diskon grup:', res.data.discount);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": \"{{session_id}}\",\n  \"items\": [\n    {\n      \"ticket_type_id\": \"{{ticket_type_id}}\",\n      \"quantity\": 30\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{base_url}}/pool/checkout", "host": ["{{base_url}}"], "path": ["pool", "checkout"] }
+          }
+        },
+        {
+          "name": "Buy Ticket (satuan, tanpa diskon)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": \"{{session_id}}\",\n  \"ticket_type_id\": \"{{ticket_type_id}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": { "raw": "{{base_url}}/pool/tickets", "host": ["{{base_url}}"], "path": ["pool", "tickets"] }
+          }
+        },
+        {
+          "name": "My Pool Tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/pool/tickets/me", "host": ["{{base_url}}"], "path": ["pool", "tickets", "me"] }
+          }
+        },
+        {
+          "name": "Cancel Pool Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/pool/tickets/{{pool_ticket_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["pool", "tickets", "{{pool_ticket_id}}", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Membership",
+      "item": [
+        {
+          "name": "List Plans (publik)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data && res.data.length) { pm.collectionVariables.set('plan_id', res.data[0].id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/membership/plans", "host": ["{{base_url}}"], "path": ["membership", "plans"] }
+          }
+        },
+        {
+          "name": "Subscribe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.data) {",
+                  "  if (res.data.payment) pm.collectionVariables.set('payment_id', res.data.payment.id);",
+                  "  if (res.data.membership) pm.collectionVariables.set('membership_id', res.data.membership.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": \"{{plan_id}}\",\n  \"auto_renew\": false\n}"
+            },
+            "url": { "raw": "{{base_url}}/membership/subscribe", "host": ["{{base_url}}"], "path": ["membership", "subscribe"] }
+          }
+        },
+        {
+          "name": "My Memberships",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/membership/me", "host": ["{{base_url}}"], "path": ["membership", "me"] }
+          }
+        },
+        {
+          "name": "Cancel Membership",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/membership/{{membership_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["membership", "{{membership_id}}", "cancel"]
             }
           }
         }

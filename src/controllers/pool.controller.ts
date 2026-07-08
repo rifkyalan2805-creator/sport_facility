@@ -6,6 +6,7 @@ import {
   BuyTicketBody,
   CreateSessionBody,
   CreateTicketTypeBody,
+  PoolCheckoutBody,
   UpdateSessionBody,
   UpdateTicketTypeBody,
 } from '../validators/pool.validator';
@@ -94,6 +95,17 @@ export class PoolController {
       sessionId: b.session_id,
       ticketTypeId: b.ticket_type_id,
       quantity: b.quantity,
+    });
+    res.status(HttpStatus.CREATED).json({ success: true, data });
+  });
+
+  checkout = catchAsync(async (req: Request, res: Response) => {
+    const b = req.body as PoolCheckoutBody;
+    const data = await this.service.checkout({
+      userId: req.userId!,
+      sessionId: b.session_id,
+      items: b.items.map((i) => ({ ticketTypeId: i.ticket_type_id, quantity: i.quantity })),
+      idempotencyKey: req.header('idempotency-key') ?? undefined,
     });
     res.status(HttpStatus.CREATED).json({ success: true, data });
   });

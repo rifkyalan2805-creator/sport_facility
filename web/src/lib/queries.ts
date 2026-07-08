@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPatch } from "./api";
+import type { DiscountTier } from "./groupDiscount";
 
 // Tipe ringkas sesuai respons backend (bisa diperluas nanti).
 export interface MembershipPlan {
@@ -119,6 +120,58 @@ export function useCancelBooking() {
   });
 }
 
+// ---- Tiket kolam milik user ----
+export interface PoolTicket {
+  id: string;
+  quantity: number;
+  total_price: string;
+  qr_code: string;
+  status: "active" | "used" | "cancelled" | "expired";
+  created_at: string;
+  pool_sessions?: { name: string; session_date: string } | null;
+  pool_ticket_types?: { name: string } | null;
+}
+
+export function useMyPoolTickets() {
+  return useQuery({
+    queryKey: ["my-pool-tickets"],
+    queryFn: () => apiGet<PoolTicket[]>("/pool/tickets/me"),
+  });
+}
+
+export function useCancelPoolTicket() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiPatch(`/pool/tickets/${id}/cancel`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-pool-tickets"] }),
+  });
+}
+
+// ---- Membership milik user ----
+export interface Membership {
+  id: string;
+  status: "active" | "pending" | "expired" | "cancelled";
+  start_date: string;
+  end_date: string;
+  auto_renew: boolean;
+  membership_plans?: { name: string; slug: string } | null;
+}
+
+export function useMyMemberships() {
+  return useQuery({
+    queryKey: ["my-memberships"],
+    queryFn: () => apiGet<Membership[]>("/membership/me"),
+  });
+}
+
+export function useCancelMembership() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiPatch(`/membership/${id}/cancel`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-memberships"] }),
+  });
+}
+
 export function useEvents() {
   return useQuery({
     queryKey: ["events"],
@@ -164,5 +217,37 @@ export function usePoolTicketTypes() {
   return useQuery({
     queryKey: ["pool-ticket-types"],
     queryFn: () => apiGet<PoolTicketType[]>("/pool/ticket-types"),
+  });
+}
+
+// ---- Sesi kolam (tanggal + kuota) untuk booking ----
+export interface PoolSession {
+  id: string;
+  name: string;
+  session_date: string;
+  start_time: string;
+  end_time: string;
+  capacity: number;
+  booked_count: number;
+  status: "open" | "full" | "closed" | "cancelled";
+}
+
+export function usePoolSessions() {
+  return useQuery({
+    queryKey: ["pool-sessions"],
+    queryFn: () => apiGet<PoolSession[]>("/pool/sessions"),
+  });
+}
+
+// Tier diskon grup (site_settings) untuk preview di Review.
+export function usePoolGroupDiscount() {
+  return useQuery({
+    queryKey: ["pool-group-discount"],
+    queryFn: async () => {
+      const row = await apiGet<{ value: { tiers: DiscountTier[] } }>(
+        "/settings/pool_group_discount",
+      );
+      return row.value?.tiers ?? [];
+    },
   });
 }

@@ -6,6 +6,7 @@ import {
   buyTicketSchema,
   createSessionSchema,
   createTicketTypeSchema,
+  poolCheckoutSchema,
   sessionIdParamSchema,
   ticketIdParamSchema,
   ticketTypeIdParamSchema,
@@ -110,6 +111,41 @@ router.patch(
  *       422: { description: Kuota penuh / sesi tidak open }
  */
 router.post('/tickets', requireAuth, validate(buyTicketSchema, 'body'), poolController.buyTicket);
+
+/**
+ * @openapi
+ * /api/v1/pool/checkout:
+ *   post:
+ *     tags: [Pool]
+ *     summary: Checkout grup — banyak tiket 1 sesi → 1 pembayaran + diskon grup otomatis
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: header
+ *         name: Idempotency-Key
+ *         schema: { type: string }
+ *         required: false
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [session_id, items]
+ *             properties:
+ *               session_id: { type: string, format: uuid }
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: [ticket_type_id, quantity]
+ *                   properties:
+ *                     ticket_type_id: { type: string, format: uuid }
+ *                     quantity: { type: integer, minimum: 1 }
+ *     responses:
+ *       201: { description: Tiket + 1 payment (diskon grup) dibuat }
+ *       422: { description: Kuota penuh / sesi tidak open }
+ */
+router.post('/checkout', requireAuth, validate(poolCheckoutSchema, 'body'), poolController.checkout);
 
 /**
  * @openapi

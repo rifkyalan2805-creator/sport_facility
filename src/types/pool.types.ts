@@ -46,3 +46,16 @@ export interface CancelTicketInput {
   id: string;
   userId: string;
 }
+
+export interface PoolCheckoutItemInput {
+  ticketTypeId: string;
+  quantity: number;
+}
+
+// Checkout grup: banyak tiket dalam 1 sesi → 1 pembayaran (diskon grup otomatis).
+export interface PoolCheckoutInput {
+  userId: string;
+  sessionId: string;
+  items: PoolCheckoutItemInput[];
+  idempotencyKey?: string;
+}

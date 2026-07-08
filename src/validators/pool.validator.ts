@@ -65,6 +65,19 @@ export const buyTicketSchema = z.object({
   quantity: z.coerce.number().int().positive().default(1),
 });
 
+// ---- Checkout grup (banyak tiket → 1 pembayaran + diskon grup) ----
+export const poolCheckoutSchema = z.object({
+  session_id: uuid,
+  items: z
+    .array(
+      z.object({
+        ticket_type_id: uuid,
+        quantity: z.coerce.number().int().positive(),
+      })
+    )
+    .min(1, 'Minimal 1 item tiket'),
+});
+
 export const sessionIdParamSchema = z.object({ id: uuid });
 export const ticketTypeIdParamSchema = z.object({ id: uuid });
 export const ticketIdParamSchema = z.object({ id: uuid });
@@ -74,3 +87,4 @@ export type UpdateSessionBody = z.infer<typeof updateSessionSchema>;
 export type CreateTicketTypeBody = z.infer<typeof createTicketTypeSchema>;
 export type UpdateTicketTypeBody = z.infer<typeof updateTicketTypeSchema>;
 export type BuyTicketBody = z.infer<typeof buyTicketSchema>;
+export type PoolCheckoutBody = z.infer<typeof poolCheckoutSchema>;

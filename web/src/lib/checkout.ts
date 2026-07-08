@@ -1,5 +1,24 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { apiPost } from "./api";
 import type { Slot } from "./queries";
+
+// ---- Kontrak generik dipakai CheckoutPanel & semua runner mode ----
+export interface CheckoutLine {
+  label: string;
+  amount: number;
+  strikethrough?: number; // harga asli bila item didiskon (mis. padel off-peak)
+}
+
+export interface CheckoutOutcome {
+  status: string; // 'paid' | 'failed'
+  invoiceNumber: string | null;
+  referenceId: string | null;
+  finalAmount: number;
+  confirmedCount?: number;
+  failedCount?: number;
+}
+
+export type CheckoutRunner = (outcome: "success" | "failure") => Promise<CheckoutOutcome>;
 
 export interface CreatedBooking {
   id: string;
@@ -118,5 +137,42 @@ export async function settlePayment(
     invoiceNumber: p.invoices?.invoice_number ?? null,
     referenceId: p.reference_id,
     finalAmount: Number(p.final_amount),
+  };
+}
+
+/**
+ * Runner mode PADEL: booking dibuat SEKALI (retry aman, di-cache di closure) →
+ * payment baru tiap percobaan → settle. Dipakai oleh CheckoutPanel generik.
+ */
+export function makePadelRunner(opts: {
+  court: { id: string; name: string };
+  date: string;
+  slots: Slot[];
+  qc: QueryClient;
+  onConsumed: () => void;
+}): CheckoutRunner {
+  const { court, date, slots, qc, onConsumed } = opts;
+  let bookings: CreatedBooking[] | null = null;
+  let failedCount = 0;
+
+  return async (outcome) => {
+    if (!bookings) {
+      const res = await createBookings(court.id, date, slots);
+      bookings = res.bookings;
+      failedCount = res.failedCount;
+      onConsumed();
+      qc.invalidateQueries({ queryKey: ["availability", court.id, date] });
+    }
+    const info = await createPayment(bookings, court.name, date);
+    const settled = await settlePayment(info.paymentId, outcome);
+    qc.invalidateQueries({ queryKey: ["my-bookings"] });
+    return {
+      status: settled.status,
+      invoiceNumber: settled.invoiceNumber,
+      referenceId: settled.referenceId,
+      finalAmount: settled.finalAmount,
+      confirmedCount: bookings.length,
+      failedCount,
+    };
   };
 }

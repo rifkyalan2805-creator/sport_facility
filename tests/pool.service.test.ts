@@ -9,7 +9,14 @@ import { PoolService } from '../src/services/pool.service';
 import { PoolSessionRepository } from '../src/repositories/poolSession.repository';
 import { PoolTicketTypeRepository } from '../src/repositories/poolTicketType.repository';
 import { PoolTicketRepository } from '../src/repositories/poolTicket.repository';
+import { SiteSettingRepository } from '../src/repositories/siteSetting.repository';
 import { PaymentService } from '../src/services/payment.service';
+
+const TIERS = [
+  { minQty: 15, percent: 10 },
+  { minQty: 30, percent: 12.5 },
+  { minQty: 50, percent: 20 },
+];
 
 const mockSessions = () =>
   ({
@@ -41,12 +48,25 @@ const mockTickets = () =>
 const mockPayments = () =>
   ({ createPayment: jest.fn() } as unknown as jest.Mocked<PaymentService>);
 
+const mockSettings = () =>
+  ({
+    findByKey: jest.fn().mockResolvedValue({ value: { tiers: TIERS } }),
+  } as unknown as jest.Mocked<SiteSettingRepository>);
+
 function build() {
   const sessions = mockSessions();
   const ticketTypes = mockTicketTypes();
   const tickets = mockTickets();
   const payments = mockPayments();
-  return { service: new PoolService(sessions, ticketTypes, tickets, payments), sessions, ticketTypes, tickets, payments };
+  const settings = mockSettings();
+  return {
+    service: new PoolService(sessions, ticketTypes, tickets, payments, settings),
+    sessions,
+    ticketTypes,
+    tickets,
+    payments,
+    settings,
+  };
 }
 
 const openSession = {
@@ -122,6 +142,56 @@ describe('PoolService.buyTicket', () => {
     (sessions.findById as jest.Mock).mockResolvedValue(null);
 
     await expect(service.buyTicket(buyInput)).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
+describe('PoolService.checkout (diskon grup)', () => {
+  const bigSession = { id: 's1', status: 'open', capacity: 100, booked_count: 0, session_date: new Date('2999-06-20') };
+  const htm = { id: 'tt1', name: 'HTM Kolam Renang', price: new Prisma.Decimal(50000) };
+
+  function setup(qty: number) {
+    const b = build();
+    (b.sessions.findById as jest.Mock).mockResolvedValue(bigSession);
+    (b.ticketTypes.findActiveById as jest.Mock).mockResolvedValue(htm);
+    (b.tickets.create as jest.Mock).mockResolvedValue({ id: 't1', quantity: qty, unit_price: new Prisma.Decimal(50000) });
+    (b.payments.createPayment as jest.Mock).mockResolvedValue({ id: 'pay1' });
+    return b;
+  }
+
+  it('10 orang → tanpa diskon (discount_amount 0)', async () => {
+    const b = setup(10);
+    const res = await b.service.checkout({ userId: 'u1', sessionId: 's1', items: [{ ticketTypeId: 'tt1', quantity: 10 }] });
+    const arg = (b.payments.createPayment as jest.Mock).mock.calls[0][0];
+    expect(arg.discountAmount).toBe(0);
+    expect(res.discount).toEqual({ percent: 0, amount: 0, totalQty: 10 });
+    expect(b.sessions.update).toHaveBeenCalledWith('s1', expect.objectContaining({ booked_count: 10, status: 'open' }), expect.anything());
+  });
+
+  it('30 orang → diskon 12,5% (Rp187.500 dari Rp1.500.000)', async () => {
+    const b = setup(30);
+    const res = await b.service.checkout({ userId: 'u1', sessionId: 's1', items: [{ ticketTypeId: 'tt1', quantity: 30 }] });
+    const arg = (b.payments.createPayment as jest.Mock).mock.calls[0][0];
+    expect(arg.discountAmount).toBe(187500); // 30×50.000×12,5%
+    expect(res.discount.percent).toBe(12.5);
+    expect(arg.items[0]).toEqual(expect.objectContaining({ itemType: 'pool_ticket', itemId: 't1', quantity: 30 }));
+  });
+
+  it('50 orang → diskon 20%', async () => {
+    const b = setup(50);
+    await b.service.checkout({ userId: 'u1', sessionId: 's1', items: [{ ticketTypeId: 'tt1', quantity: 50 }] });
+    const arg = (b.payments.createPayment as jest.Mock).mock.calls[0][0];
+    expect(arg.discountAmount).toBe(500000); // 50×50.000×20%
+  });
+
+  it('menolak (422) jika kuota tidak mencukupi', async () => {
+    const b = build();
+    (b.sessions.findById as jest.Mock).mockResolvedValue({ ...bigSession, capacity: 10, booked_count: 5 });
+    (b.ticketTypes.findActiveById as jest.Mock).mockResolvedValue(htm);
+    await expect(
+      b.service.checkout({ userId: 'u1', sessionId: 's1', items: [{ ticketTypeId: 'tt1', quantity: 10 }] })
+    ).rejects.toMatchObject({ statusCode: 422 });
+    expect(b.tickets.create).not.toHaveBeenCalled();
+    expect(b.payments.createPayment).not.toHaveBeenCalled();
   });
 });
 

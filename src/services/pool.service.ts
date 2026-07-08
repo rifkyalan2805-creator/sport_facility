@@ -8,6 +8,7 @@ import {
   CancelTicketInput,
   CreateSessionInput,
   CreateTicketTypeInput,
+  PoolCheckoutInput,
   UpdateSessionInput,
   UpdateTicketTypeInput,
 } from '../types/pool.types';
@@ -23,14 +24,21 @@ import {
   PoolTicketRepository,
   poolTicketRepository,
 } from '../repositories/poolTicket.repository';
+import {
+  SiteSettingRepository,
+  siteSettingRepository,
+} from '../repositories/siteSetting.repository';
 import { PaymentService, paymentService } from './payment.service';
+import { PaymentItemInput } from '../types/payment.types';
+import { DiscountTier, resolveGroupDiscount } from '../utils/groupDiscount';
 
 export class PoolService {
   constructor(
     private readonly sessions: PoolSessionRepository = poolSessionRepository,
     private readonly ticketTypes: PoolTicketTypeRepository = poolTicketTypeRepository,
     private readonly tickets: PoolTicketRepository = poolTicketRepository,
-    private readonly payments: PaymentService = paymentService
+    private readonly payments: PaymentService = paymentService,
+    private readonly settings: SiteSettingRepository = siteSettingRepository
   ) {}
 
   // ---- Sessions (read publik) ----
@@ -178,6 +186,107 @@ export class PoolService {
     });
 
     return { ticket, payment };
+  }
+
+  /**
+   * Checkout grup: reservasi banyak tiket dalam 1 sesi (advisory lock),
+   * hitung diskon grup (site_settings.pool_group_discount) berdasarkan
+   * TOTAL orang, lalu buat SATU pembayaran (discount_amount server-side).
+   */
+  async checkout(input: PoolCheckoutInput) {
+    const { tickets, amount, totalQty, paymentItems } = await prisma.$transaction(
+      async (tx) => {
+        await this.sessions.acquireLock(input.sessionId, tx);
+
+        const session = await this.sessions.findById(input.sessionId, tx);
+        if (!session) throw AppError.notFound('Sesi kolam tidak ditemukan');
+        if (session.status !== 'open') {
+          throw AppError.unprocessable('Sesi tidak menerima pemesanan');
+        }
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (session.session_date.toISOString().slice(0, 10) < todayStr) {
+          throw AppError.unprocessable('Sesi sudah lewat');
+        }
+
+        const totalQty = input.items.reduce((sum, it) => sum + it.quantity, 0);
+        const newCount = session.booked_count + totalQty;
+        if (newCount > session.capacity) {
+          throw AppError.unprocessable(
+            `Kuota tidak mencukupi (tersisa ${session.capacity - session.booked_count})`
+          );
+        }
+
+        const tickets = [];
+        const paymentItems: PaymentItemInput[] = [];
+        let amount = new Prisma.Decimal(0);
+
+        for (const item of input.items) {
+          const ticketType = await this.ticketTypes.findActiveById(item.ticketTypeId, tx);
+          if (!ticketType) {
+            throw AppError.notFound('Tipe tiket tidak ditemukan atau tidak aktif');
+          }
+          const unit = new Prisma.Decimal(ticketType.price);
+          const created = await this.tickets.create(
+            {
+              user_id: input.userId,
+              session_id: input.sessionId,
+              ticket_type_id: item.ticketTypeId,
+              quantity: item.quantity,
+              unit_price: unit,
+              total_price: unit.mul(item.quantity),
+              qr_code: `POOL-${randomUUID()}`,
+              status: 'active',
+            },
+            tx
+          );
+          tickets.push(created);
+          paymentItems.push({
+            itemType: 'pool_ticket',
+            itemId: created.id,
+            itemName: `${ticketType.name} x${item.quantity}`,
+            quantity: item.quantity,
+            unitPrice: unit.toNumber(),
+          });
+          amount = amount.add(unit.mul(item.quantity));
+        }
+
+        await this.sessions.update(
+          input.sessionId,
+          {
+            booked_count: newCount,
+            status: newCount >= session.capacity ? 'full' : session.status,
+          },
+          tx
+        );
+
+        return { tickets, amount, totalQty, paymentItems };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    );
+
+    // Diskon grup dihitung SERVER-SIDE (tak bisa dipalsukan client).
+    const tiers = await this.getGroupTiers();
+    const group = resolveGroupDiscount(totalQty, amount.toNumber(), tiers);
+
+    const payment = await this.payments.createPayment({
+      userId: input.userId,
+      items: paymentItems,
+      discountAmount: group.discount,
+      idempotencyKey: input.idempotencyKey,
+    });
+
+    return {
+      tickets,
+      payment,
+      discount: { percent: group.percent, amount: group.discount, totalQty },
+    };
+  }
+
+  /** Tier diskon grup dari site_settings (kosong bila belum dikonfigurasi). */
+  private async getGroupTiers(): Promise<DiscountTier[]> {
+    const row = await this.settings.findByKey('pool_group_discount');
+    const value = row?.value as { tiers?: DiscountTier[] } | null;
+    return value?.tiers ?? [];
   }
 
   async cancelTicket(input: CancelTicketInput) {

@@ -9,6 +9,8 @@ interface SummaryBarProps {
   submitting: boolean;
   message?: string | null;
   onContinue: () => void;
+  unitLabel?: string; // "slot" (padel) / "orang" (pool)
+  emptyLabel?: string;
 }
 
 /** Footer bar sticky: total biaya + tombol Lanjut (disabled bila belum ada slot). */
@@ -19,6 +21,8 @@ export default function SummaryBar({
   submitting,
   message,
   onContinue,
+  unitLabel = "slot",
+  emptyLabel = "Belum ada slot dipilih",
 }: SummaryBarProps) {
   const disabled = count === 0 || submitting;
   return (
@@ -26,7 +30,7 @@ export default function SummaryBar({
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-ink-500">
-            {count > 0 ? `${count} slot · ${courtName ?? ""}` : "Belum ada slot dipilih"}
+            {count > 0 ? `${count} ${unitLabel} · ${courtName ?? ""}` : emptyLabel}
           </p>
           <p className="text-2xl font-semibold text-ink-900">{formatRupiah(total)}</p>
           {message && <p className="mt-0.5 text-sm font-medium text-neon-purple">{message}</p>}

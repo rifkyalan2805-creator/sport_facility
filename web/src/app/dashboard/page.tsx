@@ -4,7 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { useAuth } from "@/lib/auth-context";
-import { useMyBookings, useCancelBooking, type Booking } from "@/lib/queries";
+import {
+  useMyBookings,
+  useCancelBooking,
+  useMyPoolTickets,
+  useCancelPoolTicket,
+  useMyMemberships,
+  useCancelMembership,
+  type Booking,
+  type PoolTicket,
+  type Membership,
+} from "@/lib/queries";
 import { formatRupiah, formatDateID, formatTimeISO } from "@/lib/format";
 
 const CANCELLABLE: Booking["status"][] = ["pending", "confirmed"];
@@ -107,6 +117,123 @@ function BookingsSection() {
   );
 }
 
+const POOL_STATUS: Record<PoolTicket["status"], { label: string; cls: string }> = {
+  active: { label: "Aktif", cls: "bg-green-100 text-green-700" },
+  used: { label: "Terpakai", cls: "bg-blue-100 text-blue-700" },
+  cancelled: { label: "Dibatalkan", cls: "bg-red-100 text-red-600" },
+  expired: { label: "Kadaluarsa", cls: "bg-ink-900/10 text-ink-700" },
+};
+
+function PoolTicketsSection() {
+  const { data: tickets = [], isLoading } = useMyPoolTickets();
+  const cancel = useCancelPoolTicket();
+  if (!isLoading && tickets.length === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-lg font-semibold text-ink-900">Tiket Kolam Saya</h2>
+      {isLoading ? (
+        <div className="mt-4 h-20 animate-pulse rounded-2xl bg-ink-900/5" />
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {tickets.map((t) => {
+            const s = POOL_STATUS[t.status] ?? POOL_STATUS.active;
+            return (
+              <li
+                key={t.id}
+                className="flex flex-col gap-3 rounded-2xl border border-ink-900/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-ink-900">{t.pool_sessions?.name ?? "Sesi Kolam"}</p>
+                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.cls}`}>
+                      {s.label}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-ink-500">
+                    {t.pool_sessions?.session_date ? formatDateID(t.pool_sessions.session_date) : "—"} ·{" "}
+                    {t.quantity} orang · <span className="font-mono text-ink-400">{t.qr_code.slice(0, 13)}…</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 sm:flex-col sm:items-end sm:gap-1">
+                  <p className="text-lg font-semibold text-ink-900">{formatRupiah(t.total_price)}</p>
+                  {t.status === "active" && (
+                    <button
+                      type="button"
+                      onClick={() => window.confirm("Batalkan tiket ini?") && cancel.mutate(t.id)}
+                      disabled={cancel.isPending && cancel.variables === t.id}
+                      className="text-sm font-medium text-ink-400 outline-none transition-colors hover:text-red-600 focus-visible:text-red-600 disabled:opacity-50"
+                    >
+                      {cancel.isPending && cancel.variables === t.id ? "Membatalkan…" : "Batalkan"}
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+const MEMBER_STATUS: Record<Membership["status"], { label: string; cls: string }> = {
+  active: { label: "Aktif", cls: "bg-green-100 text-green-700" },
+  pending: { label: "Menunggu", cls: "bg-amber-100 text-amber-700" },
+  expired: { label: "Kadaluarsa", cls: "bg-ink-900/10 text-ink-700" },
+  cancelled: { label: "Dibatalkan", cls: "bg-red-100 text-red-600" },
+};
+
+function MembershipsSection() {
+  const { data: memberships = [], isLoading } = useMyMemberships();
+  const cancel = useCancelMembership();
+  if (!isLoading && memberships.length === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-lg font-semibold text-ink-900">Membership Saya</h2>
+      {isLoading ? (
+        <div className="mt-4 h-20 animate-pulse rounded-2xl bg-ink-900/5" />
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {memberships.map((m) => {
+            const s = MEMBER_STATUS[m.status] ?? MEMBER_STATUS.pending;
+            const cancellable = m.status === "active" || m.status === "pending";
+            return (
+              <li
+                key={m.id}
+                className="flex flex-col gap-3 rounded-2xl border border-ink-900/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-ink-900">{m.membership_plans?.name ?? "Membership"}</p>
+                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.cls}`}>
+                      {s.label}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-ink-500">
+                    {formatDateID(m.start_date)} – {formatDateID(m.end_date)}
+                  </p>
+                </div>
+                {cancellable && (
+                  <button
+                    type="button"
+                    onClick={() => window.confirm("Batalkan membership ini?") && cancel.mutate(m.id)}
+                    disabled={cancel.isPending && cancel.variables === m.id}
+                    className="text-sm font-medium text-ink-400 outline-none transition-colors hover:text-red-600 focus-visible:text-red-600 disabled:opacity-50"
+                  >
+                    {cancel.isPending && cancel.variables === m.id ? "Membatalkan…" : "Batalkan"}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function DashboardContent() {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -146,6 +273,8 @@ function DashboardContent() {
       </div>
 
       <BookingsSection />
+      <PoolTicketsSection />
+      <MembershipsSection />
 
       <button
         onClick={onLogout}

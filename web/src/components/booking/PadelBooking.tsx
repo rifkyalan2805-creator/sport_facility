@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePadelCourts, useAvailability, type Slot } from "@/lib/queries";
 import { buildDatePills } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
+import { makePadelRunner, type CheckoutRunner, type CheckoutLine } from "@/lib/checkout";
 import CourtCard from "./CourtCard";
 import DatePicker from "./DatePicker";
 import ScheduleGrid from "./ScheduleGrid";
@@ -26,6 +28,8 @@ function StepLabel({ n, title }: { n: number; title: string }) {
 export default function PadelBooking() {
   const router = useRouter();
   const { user } = useAuth();
+  const qc = useQueryClient();
+  const runnerRef = useRef<CheckoutRunner | null>(null);
   const { data: courts = [], isLoading: courtsLoading } = usePadelCourts();
 
   const pills = useMemo(() => buildDatePills(14), []);
@@ -102,15 +106,32 @@ export default function PadelBooking() {
   const total = useMemo(() => chosen.reduce((sum, s) => sum + s.price, 0), [chosen]);
   const selectedIds = useMemo(() => new Set(Object.keys(selected)), [selected]);
 
-  // "Lanjut" → wajib login → buka panel checkout (pembuatan booking + bayar di panel).
+  const checkoutLines: CheckoutLine[] = useMemo(
+    () =>
+      chosen.map((s) => ({
+        label: `${s.start}–${s.end}`,
+        amount: s.price,
+        strikethrough: s.basePrice > s.price ? s.basePrice : undefined,
+      })),
+    [chosen],
+  );
+
+  // "Lanjut" → wajib login → bangun runner padel → buka panel checkout.
   const onContinue = useCallback(() => {
-    if (!chosen.length) return;
+    if (!chosen.length || !selectedCourt) return;
     if (!user) {
       router.push("/login?redirect=/booking/padel");
       return;
     }
+    runnerRef.current = makePadelRunner({
+      court: { id: selectedCourt.id, name: selectedCourt.name },
+      date: selectedDate,
+      slots: chosen,
+      qc,
+      onConsumed: () => setSelected({}),
+    });
     setCheckoutOpen(true);
-  }, [chosen.length, user, router]);
+  }, [chosen, selectedCourt, user, router, selectedDate, qc]);
 
   return (
     <>
@@ -195,16 +216,20 @@ export default function PadelBooking() {
       />
 
       {/* Panel checkout (review → bayar simulasi → struk) */}
-      <CheckoutPanel
-        open={checkoutOpen}
-        court={selectedCourt}
-        date={selectedDate}
-        dateLabel={dateLabel}
-        slots={chosen}
-        total={total}
-        onClose={() => setCheckoutOpen(false)}
-        onConsumed={() => setSelected({})}
-      />
+      {checkoutOpen && runnerRef.current && (
+        <CheckoutPanel
+          open
+          variant="modal"
+          subtitle={`${selectedCourt?.name ?? ""} · ${dateLabel}`}
+          lines={checkoutLines}
+          subtotal={total}
+          total={total}
+          itemNoun="booking"
+          run={runnerRef.current}
+          allowSimulateFailure
+          onClose={() => setCheckoutOpen(false)}
+        />
+      )}
     </>
   );
 }
