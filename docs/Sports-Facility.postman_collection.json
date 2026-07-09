@@ -101,6 +101,10 @@
     {
       "key": "event_registration_id",
       "value": ""
+    },
+    {
+      "key": "waiting_id",
+      "value": ""
     }
   ],
   "item": [
@@ -1888,6 +1892,83 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"qr_code\": \"EVT-xxxxxxxx\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Waiting List",
+      "description": "Antrean slot court penuh (padel & tennis). Join hanya jika slot memang sudah dibooking; slot kosong -> 422. Set court_id via Courts > List, dan preferred_date/start/end ke slot yang sudah booked.",
+      "item": [
+        {
+          "name": "Join Waiting List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d=(pm.response.json()||{}).data;",
+                  "if(d&&d.id){pm.collectionVariables.set(\"waiting_id\",d.id);console.log(\"waiting_id:\",d.id,\"status:\",d.status);}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"court_id\": \"{{court_id}}\",\n  \"preferred_date\": \"{{today}}\",\n  \"preferred_start\": \"08:00\",\n  \"preferred_end\": \"09:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/waiting-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "waiting-list"
+              ]
+            }
+          }
+        },
+        {
+          "name": "My Waiting List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/waiting-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "waiting-list"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Waiting List",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/waiting-list/{{waiting_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "waiting-list",
+                "{{waiting_id}}",
+                "cancel"
+              ]
             }
           }
         }

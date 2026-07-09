@@ -13,10 +13,13 @@ import {
   useCancelMembership,
   useMyEventRegistrations,
   useCancelEventRegistration,
+  useMyWaitingList,
+  useCancelWaitingList,
   type Booking,
   type PoolTicket,
   type Membership,
   type EventRegistration,
+  type WaitingEntry,
 } from "@/lib/queries";
 import { formatRupiah, formatDateID, formatTimeISO } from "@/lib/format";
 
@@ -295,6 +298,64 @@ function EventsSection() {
   );
 }
 
+const WAITING_STATUS: Record<WaitingEntry["status"], { label: string; cls: string }> = {
+  waiting: { label: "Menunggu", cls: "bg-amber-100 text-amber-700" },
+  notified: { label: "Slot tersedia!", cls: "bg-green-100 text-green-700" },
+  booked: { label: "Berhasil booking", cls: "bg-blue-100 text-blue-700" },
+  expired: { label: "Kedaluwarsa", cls: "bg-ink-900/10 text-ink-700" },
+  cancelled: { label: "Dibatalkan", cls: "bg-red-100 text-red-600" },
+};
+const WAITING_CANCELLABLE: WaitingEntry["status"][] = ["waiting", "notified"];
+
+function WaitingListSection() {
+  const { data: entries = [], isLoading } = useMyWaitingList();
+  const cancel = useCancelWaitingList();
+  if (!isLoading && entries.length === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-lg font-semibold text-ink-900">Antrean Saya</h2>
+      {isLoading ? (
+        <div className="mt-4 h-20 animate-pulse rounded-2xl bg-ink-900/5" />
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {entries.map((e) => {
+            const s = WAITING_STATUS[e.status] ?? WAITING_STATUS.waiting;
+            return (
+              <li
+                key={e.id}
+                className="flex flex-col gap-3 rounded-2xl border border-ink-900/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-ink-900">{e.courts?.name ?? "Lapangan"}</p>
+                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.cls}`}>
+                      {s.label}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-ink-500">
+                    {formatDateID(e.preferred_date)} · {formatTimeISO(e.preferred_start)}–{formatTimeISO(e.preferred_end)}
+                  </p>
+                </div>
+                {WAITING_CANCELLABLE.includes(e.status) && (
+                  <button
+                    type="button"
+                    onClick={() => window.confirm("Batalkan antrean ini?") && cancel.mutate(e.id)}
+                    disabled={cancel.isPending && cancel.variables === e.id}
+                    className="text-sm font-medium text-ink-400 outline-none transition-colors hover:text-red-600 focus-visible:text-red-600 disabled:opacity-50"
+                  >
+                    {cancel.isPending && cancel.variables === e.id ? "Membatalkan…" : "Batalkan"}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function DashboardContent() {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -353,6 +414,7 @@ function DashboardContent() {
       <PoolTicketsSection />
       <MembershipsSection />
       <EventsSection />
+      <WaitingListSection />
 
       <button
         onClick={onLogout}

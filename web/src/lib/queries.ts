@@ -445,6 +445,52 @@ export function useCancelEventRegistration() {
   });
 }
 
+// ---- Waiting list (antrean slot court penuh — padel & tennis) ----
+export type WaitingStatus = "waiting" | "notified" | "booked" | "expired" | "cancelled";
+
+export interface WaitingEntry {
+  id: string;
+  court_id: string;
+  preferred_date: string;
+  preferred_start: string;
+  preferred_end: string;
+  status: WaitingStatus;
+  notified_at: string | null;
+  created_at: string;
+  courts?: { name: string; code: string } | null;
+}
+
+export interface JoinWaitingListInput {
+  court_id: string;
+  preferred_date: string; // YYYY-MM-DD
+  preferred_start: string; // HH:mm
+  preferred_end: string; // HH:mm
+}
+
+export function useMyWaitingList(enabled = true) {
+  return useQuery({
+    queryKey: ["my-waiting-list"],
+    queryFn: () => apiGet<WaitingEntry[]>("/waiting-list"),
+    enabled,
+  });
+}
+
+export function useJoinWaitingList() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: JoinWaitingListInput) => apiPost<WaitingEntry>("/waiting-list", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-waiting-list"] }),
+  });
+}
+
+export function useCancelWaitingList() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiPatch(`/waiting-list/${id}/cancel`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-waiting-list"] }),
+  });
+}
+
 // ---- Daftar harga (site_settings.pricing) untuk halaman /harga ----
 export interface PricingData {
   tennis: {

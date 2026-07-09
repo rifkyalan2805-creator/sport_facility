@@ -9,6 +9,8 @@ interface ScheduleGridProps {
   loading: boolean;
   selectedIds: Set<string>;
   onToggle: (slot: Slot) => void;
+  /** Bila diisi, slot "booked" jadi bisa diklik untuk masuk antrean. */
+  onJoinWaitlist?: (slot: Slot) => void;
 }
 
 const GRID = "grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3";
@@ -20,6 +22,7 @@ export default function ScheduleGrid({
   loading,
   selectedIds,
   onToggle,
+  onJoinWaitlist,
 }: ScheduleGridProps) {
   return (
     <div className="grid gap-6 md:grid-cols-[300px,1fr]">
@@ -72,17 +75,20 @@ export default function ScheduleGrid({
             {result.slots.map((s) => {
               const isSelected = selectedIds.has(s.id);
               const booked = s.status === "booked";
+              const canWaitlist = booked && Boolean(onJoinWaitlist);
               const discounted = s.price !== s.basePrice;
               return (
                 <button
                   key={s.id}
                   type="button"
-                  disabled={booked}
+                  disabled={booked && !canWaitlist}
                   aria-pressed={isSelected}
-                  onClick={() => onToggle(s)}
+                  onClick={() => (booked ? onJoinWaitlist?.(s) : onToggle(s))}
                   className={`flex flex-col rounded-2xl border p-3 text-left outline-none transition-colors duration-200 focus-visible:ring-4 focus-visible:ring-neon-purple/40 ${
                     booked
-                      ? "cursor-not-allowed border-ink-900/5 bg-ink-900/[0.03] opacity-60"
+                      ? canWaitlist
+                        ? "cursor-pointer border-amber-300/70 bg-amber-50/50 hover:border-amber-400"
+                        : "cursor-not-allowed border-ink-900/5 bg-ink-900/[0.03] opacity-60"
                       : isSelected
                         ? "border-neon-pink bg-neon-pink/5"
                         : "border-ink-900/10 bg-white hover:border-neon-purple/60"
@@ -93,8 +99,12 @@ export default function ScheduleGrid({
                     {s.start}–{s.end}
                   </span>
                   {booked ? (
-                    <span className="mt-2 inline-flex w-fit rounded-full bg-ink-900/10 px-2 py-0.5 text-[11px] font-medium text-ink-500">
-                      Booked
+                    <span
+                      className={`mt-2 inline-flex w-fit rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                        canWaitlist ? "bg-amber-100 text-amber-700" : "bg-ink-900/10 text-ink-500"
+                      }`}
+                    >
+                      {canWaitlist ? "Booked · Antre" : "Booked"}
                     </span>
                   ) : (
                     <span className="mt-1.5">

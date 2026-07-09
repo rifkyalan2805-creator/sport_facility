@@ -4,15 +4,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePadelCourts, useAvailability, type Slot } from "@/lib/queries";
+import { usePadelCourts, useAvailability, useJoinWaitingList, type Slot } from "@/lib/queries";
 import { buildDatePills } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
+import { getErrorMessage } from "@/lib/error";
 import { makeCourtRunner, type CheckoutRunner, type CheckoutLine } from "@/lib/checkout";
 import CourtCard from "./CourtCard";
 import DatePicker from "./DatePicker";
 import ScheduleGrid from "./ScheduleGrid";
 import SummaryBar from "./SummaryBar";
 import CheckoutPanel from "./CheckoutPanel";
+import WaitlistDialog from "./WaitlistDialog";
 
 function StepLabel({ n, title }: { n: number; title: string }) {
   return (
@@ -38,6 +40,8 @@ export default function PadelBooking() {
   const [selected, setSelected] = useState<Record<string, Slot>>({});
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [animated, setAnimated] = useState(false);
+  const [waitlistSlot, setWaitlistSlot] = useState<Slot | null>(null);
+  const joinWaitlist = useJoinWaitingList();
 
   // Court pertama dipilih otomatis begitu data tersedia.
   useEffect(() => {
@@ -101,6 +105,34 @@ export default function PadelBooking() {
       return next;
     });
   }, []);
+
+  // Slot booked → masuk antrean (wajib login dulu).
+  const onJoinWaitlist = useCallback(
+    (slot: Slot) => {
+      if (!user) {
+        router.push("/login?redirect=/booking/padel");
+        return;
+      }
+      joinWaitlist.reset();
+      setWaitlistSlot(slot);
+    },
+    [user, router, joinWaitlist],
+  );
+
+  const closeWaitlist = useCallback(() => {
+    setWaitlistSlot(null);
+    joinWaitlist.reset();
+  }, [joinWaitlist]);
+
+  const confirmWaitlist = useCallback(() => {
+    if (!selectedCourt || !waitlistSlot) return;
+    joinWaitlist.mutate({
+      court_id: selectedCourt.id,
+      preferred_date: selectedDate,
+      preferred_start: waitlistSlot.start,
+      preferred_end: waitlistSlot.end,
+    });
+  }, [selectedCourt, waitlistSlot, selectedDate, joinWaitlist]);
 
   const chosen = Object.values(selected);
   const total = useMemo(() => chosen.reduce((sum, s) => sum + s.price, 0), [chosen]);
@@ -201,6 +233,7 @@ export default function PadelBooking() {
               loading={slotsLoading}
               selectedIds={selectedIds}
               onToggle={toggleSlot}
+              onJoinWaitlist={onJoinWaitlist}
             />
           </div>
         </section>
@@ -228,6 +261,22 @@ export default function PadelBooking() {
           run={runnerRef.current}
           allowSimulateFailure
           onClose={() => setCheckoutOpen(false)}
+        />
+      )}
+
+      {/* Dialog masuk antrean untuk slot yang sudah dibooking */}
+      {waitlistSlot && selectedCourt && (
+        <WaitlistDialog
+          open
+          courtName={selectedCourt.name}
+          dateLabel={dateLabel}
+          start={waitlistSlot.start}
+          end={waitlistSlot.end}
+          submitting={joinWaitlist.isPending}
+          success={joinWaitlist.isSuccess}
+          error={joinWaitlist.isError ? getErrorMessage(joinWaitlist.error) : ""}
+          onConfirm={confirmWaitlist}
+          onClose={closeWaitlist}
         />
       )}
     </>

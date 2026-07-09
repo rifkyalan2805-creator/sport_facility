@@ -10,16 +10,19 @@ import {
   useTennisPrices,
   useAvailability,
   useMyAbonemenRegistrations,
+  useJoinWaitingList,
   type Slot,
 } from "@/lib/queries";
 import { formatRupiah, buildDatePills } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
+import { getErrorMessage } from "@/lib/error";
 import { makeCourtRunner, type CheckoutLine, type CheckoutRunner } from "@/lib/checkout";
 import Stepper from "./Stepper";
 import CourtCard from "./CourtCard";
 import DatePicker from "./DatePicker";
 import ScheduleGrid from "./ScheduleGrid";
 import CheckoutPanel from "./CheckoutPanel";
+import WaitlistDialog from "./WaitlistDialog";
 
 const STEPS = ["Lapangan", "Jadwal & Tarif", "Review", "Pay"];
 type BookingType = "insidentil" | "abonemen";
@@ -51,6 +54,8 @@ export default function TennisWizard() {
   const [withLight, setWithLight] = useState(true);
   const [selected, setSelected] = useState<Record<string, Slot>>({});
   const [animated, setAnimated] = useState(false);
+  const [waitlistSlot, setWaitlistSlot] = useState<Slot | null>(null);
+  const joinWaitlist = useJoinWaitingList();
 
   // Court pertama dipilih otomatis begitu data tersedia.
   useEffect(() => {
@@ -131,6 +136,34 @@ export default function TennisWizard() {
       return next;
     });
   }, []);
+
+  // Slot booked → masuk antrean (wajib login dulu).
+  const onJoinWaitlist = useCallback(
+    (slot: Slot) => {
+      if (!user) {
+        router.push("/login?redirect=/booking/tennis");
+        return;
+      }
+      joinWaitlist.reset();
+      setWaitlistSlot(slot);
+    },
+    [user, router, joinWaitlist],
+  );
+
+  const closeWaitlist = useCallback(() => {
+    setWaitlistSlot(null);
+    joinWaitlist.reset();
+  }, [joinWaitlist]);
+
+  const confirmWaitlist = useCallback(() => {
+    if (!selectedCourt || !waitlistSlot) return;
+    joinWaitlist.mutate({
+      court_id: selectedCourt.id,
+      preferred_date: selectedDate,
+      preferred_start: waitlistSlot.start,
+      preferred_end: waitlistSlot.end,
+    });
+  }, [selectedCourt, waitlistSlot, selectedDate, joinWaitlist]);
 
   const chosen = Object.values(selected);
   const total = useMemo(() => chosen.reduce((sum, s) => sum + s.price, 0), [chosen]);
@@ -354,6 +387,7 @@ export default function TennisWizard() {
                 loading={slotsLoading}
                 selectedIds={selectedIds}
                 onToggle={toggleSlot}
+                onJoinWaitlist={onJoinWaitlist}
               />
             </div>
           </section>
@@ -429,6 +463,22 @@ export default function TennisWizard() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* Dialog masuk antrean untuk slot yang sudah dibooking */}
+      {waitlistSlot && selectedCourt && (
+        <WaitlistDialog
+          open
+          courtName={selectedCourt.name}
+          dateLabel={dateLabel}
+          start={waitlistSlot.start}
+          end={waitlistSlot.end}
+          submitting={joinWaitlist.isPending}
+          success={joinWaitlist.isSuccess}
+          error={joinWaitlist.isError ? getErrorMessage(joinWaitlist.error) : ""}
+          onConfirm={confirmWaitlist}
+          onClose={closeWaitlist}
+        />
       )}
     </div>
   );
