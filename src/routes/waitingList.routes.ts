@@ -1,13 +1,15 @@
 import { Router } from 'express';
 import { waitingListController } from '../controllers/waitingList.controller';
-import { requireAuth } from '../middlewares/auth';
+import { requireAuth, requireRole } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import {
   joinWaitingListSchema,
+  listAllWaitingQuerySchema,
   waitingIdParamSchema,
 } from '../validators/waitingList.validator';
 
 const router = Router();
+const adminOnly = requireRole('admin', 'superadmin');
 
 router.use(requireAuth);
 
@@ -45,6 +47,22 @@ router.get('/', waitingListController.listMine);
 
 /**
  * @openapi
+ * /api/v1/waiting-list/all:
+ *   get:
+ *     tags: [WaitingList]
+ *     summary: List semua antrean (admin) — filter opsional court_id & date
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - { in: query, name: court_id, schema: { type: string, format: uuid } }
+ *       - { in: query, name: date, schema: { type: string, example: "2026-06-20" } }
+ *     responses:
+ *       200: { description: Daftar antrean }
+ *       403: { description: Bukan admin }
+ */
+router.get('/all', adminOnly, validate(listAllWaitingQuerySchema, 'query'), waitingListController.listAll);
+
+/**
+ * @openapi
  * /api/v1/waiting-list/{id}/cancel:
  *   patch:
  *     tags: [WaitingList]
@@ -60,6 +78,26 @@ router.patch(
   '/:id/cancel',
   validate(waitingIdParamSchema, 'params'),
   waitingListController.cancel
+);
+
+/**
+ * @openapi
+ * /api/v1/waiting-list/{id}/notify:
+ *   patch:
+ *     tags: [WaitingList]
+ *     summary: Notifikasi manual peserta antrean (admin) — waiting → notified
+ *     security: [{ bearerAuth: [] }]
+ *     parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+ *     responses:
+ *       200: { description: Dinotifikasi }
+ *       403: { description: Bukan admin }
+ *       422: { description: Status bukan 'waiting' }
+ */
+router.patch(
+  '/:id/notify',
+  adminOnly,
+  validate(waitingIdParamSchema, 'params'),
+  waitingListController.notify
 );
 
 export default router;

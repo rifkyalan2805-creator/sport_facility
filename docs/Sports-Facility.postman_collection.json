@@ -1971,6 +1971,51 @@
               ]
             }
           }
+        },
+        {
+          "name": "List All (admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/waiting-list/all?court_id={{court_id}}&date={{today}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "waiting-list",
+                "all"
+              ],
+              "query": [
+                {
+                  "key": "court_id",
+                  "value": "{{court_id}}"
+                },
+                {
+                  "key": "date",
+                  "value": "{{today}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Notify (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/waiting-list/{{waiting_id}}/notify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "waiting-list",
+                "{{waiting_id}}",
+                "notify"
+              ]
+            }
+          }
         }
       ]
     }

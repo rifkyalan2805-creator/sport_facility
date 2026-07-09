@@ -24,6 +24,19 @@ export class WaitingListController {
     res.status(HttpStatus.OK).json({ success: true, data });
   });
 
+  listAll = catchAsync(async (req: Request, res: Response) => {
+    const data = await this.service.listAll({
+      courtId: req.query.court_id as string | undefined,
+      date: req.query.date as string | undefined,
+    });
+    res.status(HttpStatus.OK).json({ success: true, data });
+  });
+
+  notify = catchAsync(async (req: Request, res: Response) => {
+    const data = await this.service.notify(req.params.id);
+    res.status(HttpStatus.OK).json({ success: true, data });
+  });
+
   cancel = catchAsync(async (req: Request, res: Response) => {
     const data = await this.service.cancel({ id: req.params.id, userId: req.userId! });
     res.status(HttpStatus.OK).json({ success: true, data });

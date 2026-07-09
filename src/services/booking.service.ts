@@ -22,6 +22,7 @@ import {
   AbonemenRegistrationRepository,
   abonemenRegistrationRepository,
 } from '../repositories/abonemenRegistration.repository';
+import { WaitingListService, waitingListService } from './waitingList.service';
 
 // Status yang masih boleh dibatalkan oleh user.
 const CANCELLABLE: Array<'pending' | 'confirmed'> = ['pending', 'confirmed'];
@@ -34,7 +35,8 @@ export class BookingService {
     private readonly abonemen: UserAbonemenRepository = userAbonemenRepository,
     private readonly settings: SiteSettingRepository = siteSettingRepository,
     private readonly pricing: PricingRepository = pricingRepository,
-    private readonly registrations: AbonemenRegistrationRepository = abonemenRegistrationRepository
+    private readonly registrations: AbonemenRegistrationRepository = abonemenRegistrationRepository,
+    private readonly waitingList: WaitingListService = waitingListService
   ) {}
 
   /**
@@ -255,7 +257,7 @@ export class BookingService {
       );
     }
 
-    return prisma.$transaction(async (tx) => {
+    const cancelled = await prisma.$transaction(async (tx) => {
       if (booking.abonemen_id) {
         await tx.user_abonemen.update({
           where: { id: booking.abonemen_id },
@@ -272,6 +274,21 @@ export class BookingService {
         tx
       );
     });
+
+    // Slot kini bebas → promosikan antrean tertua yang cocok (best-effort,
+    // tidak boleh menggagalkan pembatalan yang sudah tersimpan).
+    try {
+      await this.waitingList.promoteForFreedSlot({
+        courtId: booking.court_id,
+        date: booking.booking_date.toISOString().slice(0, 10),
+        start: dateToTime(booking.start_time),
+        end: dateToTime(booking.end_time),
+      });
+    } catch {
+      /* abaikan — pembatalan tetap sukses */
+    }
+
+    return cancelled;
   }
 
   /** Check-in saat user datang ke lapangan. */

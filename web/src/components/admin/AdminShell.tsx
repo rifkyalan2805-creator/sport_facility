@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/pricing", label: "Harga" },
   { href: "/admin/membership", label: "Membership" },
   { href: "/admin/events", label: "Event" },
+  { href: "/admin/waitlist", label: "Antrean" },
   { href: "/admin/promo", label: "Promo" },
   { href: "/admin/cms", label: "Konten" },
   { href: "/admin/settings", label: "Pengaturan" },

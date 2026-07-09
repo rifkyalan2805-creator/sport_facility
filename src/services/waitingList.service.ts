@@ -11,6 +11,8 @@ import { BookingRepository, bookingRepository } from '../repositories/booking.re
 
 // Status yang masih bisa dibatalkan oleh user.
 const CANCELLABLE = ['waiting', 'notified'];
+// Berapa lama slot "ditahan" untuk peserta yang dinotifikasi sebelum kedaluwarsa.
+const NOTIFY_WINDOW_HOURS = 24;
 
 export class WaitingListService {
   constructor(
@@ -55,8 +57,58 @@ export class WaitingListService {
     });
   }
 
-  listMine(userId: string) {
+  async listMine(userId: string) {
+    await this.waiting.expireStale();
     return this.waiting.findManyByUser(userId);
+  }
+
+  /** Admin: semua antrean (filter opsional court/tanggal). */
+  async listAll(filters: { courtId?: string; date?: string }) {
+    await this.waiting.expireStale();
+    return this.waiting.listAll(filters);
+  }
+
+  /** Admin: notifikasi manual — tandai antrean 'waiting' menjadi 'notified'. */
+  async notify(id: string) {
+    const entry = await this.waiting.findById(id);
+    if (!entry) throw AppError.notFound('Entri waiting list tidak ditemukan');
+    if (entry.status !== 'waiting') {
+      throw AppError.unprocessable(
+        `Antrean berstatus "${entry.status}" tidak bisa dinotifikasi`
+      );
+    }
+    const now = new Date();
+    return this.waiting.update(entry.id, {
+      status: 'notified',
+      notified_at: now,
+      expired_at: new Date(now.getTime() + NOTIFY_WINDOW_HOURS * 3600_000),
+    });
+  }
+
+  /**
+   * Auto-promote saat slot bebas (mis. booking dibatalkan): antrean 'waiting'
+   * tertua yang overlap dinaikkan ke 'notified'. Best-effort — kembalikan
+   * entri yang dipromosikan atau null.
+   */
+  async promoteForFreedSlot(input: {
+    courtId: string;
+    date: string;
+    start: string;
+    end: string;
+  }) {
+    const candidate = await this.waiting.findEarliestWaiting(
+      input.courtId,
+      input.date,
+      input.start,
+      input.end
+    );
+    if (!candidate) return null;
+    const now = new Date();
+    return this.waiting.update(candidate.id, {
+      status: 'notified',
+      notified_at: now,
+      expired_at: new Date(now.getTime() + NOTIFY_WINDOW_HOURS * 3600_000),
+    });
   }
 
   async cancel(input: CancelWaitingInput) {

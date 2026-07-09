@@ -20,4 +20,10 @@ export const joinWaitingListSchema = z
 
 export const waitingIdParamSchema = z.object({ id: uuid });
 
+export const listAllWaitingQuerySchema = z.object({
+  court_id: uuid.optional(),
+  date: dateStr.optional(),
+});
+
 export type JoinWaitingListBody = z.infer<typeof joinWaitingListSchema>;
+export type ListAllWaitingQuery = z.infer<typeof listAllWaitingQuerySchema>;
