@@ -1064,6 +1064,155 @@
           }
         }
       ]
+    },
+    {
+      "name": "Admin · Reports",
+      "item": [
+        {
+          "name": "Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Kartu + revenue 7 hari. Admin only.",
+            "url": { "raw": "{{base_url}}/reports/summary", "host": ["{{base_url}}"], "path": ["reports", "summary"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin · Transaksi",
+      "item": [
+        {
+          "name": "All Bookings (scope=all)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Semua booking lintas-user. scope=all hanya dihormati untuk admin.",
+            "url": {
+              "raw": "{{base_url}}/bookings?scope=all&limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"],
+              "query": [
+                { "key": "scope", "value": "all" },
+                { "key": "limit", "value": "100" },
+                { "key": "status", "value": "confirmed", "disabled": true },
+                { "key": "booking_date", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "All Payments (scope=all)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments?scope=all&limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["payments"],
+              "query": [
+                { "key": "scope", "value": "all" },
+                { "key": "limit", "value": "100" },
+                { "key": "status", "value": "paid", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin · Settings",
+      "item": [
+        {
+          "name": "List Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/settings", "host": ["{{base_url}}"], "path": ["settings"] }
+          }
+        },
+        {
+          "name": "Get Setting (pool_group_discount)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/settings/pool_group_discount", "host": ["{{base_url}}"], "path": ["settings", "pool_group_discount"] }
+          }
+        },
+        {
+          "name": "Update Setting (pool_group_discount)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": {\n    \"tiers\": [\n      { \"minQty\": 15, \"percent\": 10 },\n      { \"minQty\": 30, \"percent\": 12.5 },\n      { \"minQty\": 50, \"percent\": 20 }\n    ]\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/settings/pool_group_discount", "host": ["{{base_url}}"], "path": ["settings", "pool_group_discount"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin · CMS",
+      "item": [
+        {
+          "name": "List Banners",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/cms/banners", "host": ["{{base_url}}"], "path": ["cms", "banners"] }
+          }
+        },
+        {
+          "name": "List FAQs",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/cms/faqs", "host": ["{{base_url}}"], "path": ["cms", "faqs"] }
+          }
+        },
+        {
+          "name": "Create FAQ (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Bagaimana cara booking?\",\n  \"answer\": \"Pilih lapangan, tanggal, lalu slot.\",\n  \"category\": \"general\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/cms/faqs", "host": ["{{base_url}}"], "path": ["cms", "faqs"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin · Promo",
+      "item": [
+        {
+          "name": "List Promos (admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/promos", "host": ["{{base_url}}"], "path": ["promos"] }
+          }
+        },
+        {
+          "name": "Create Promo (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"HEMAT10\",\n  \"name\": \"Diskon 10%\",\n  \"type\": \"percentage\",\n  \"discount_value\": 10,\n  \"min_purchase\": 100000,\n  \"quota\": 100,\n  \"applicable_to\": [\"all\"],\n  \"valid_from\": \"2026-01-01T00:00\",\n  \"valid_until\": \"2027-01-01T00:00\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/promos", "host": ["{{base_url}}"], "path": ["promos"] }
+          }
+        }
+      ]
     }
   ]
 }
