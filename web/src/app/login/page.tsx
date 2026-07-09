@@ -9,29 +9,36 @@ import { getErrorMessage } from "@/lib/error";
 const inputCls =
   "mt-1 w-full rounded-xl border border-ink-900/15 px-4 py-3 text-sm outline-none transition-colors focus:border-neon-purple";
 
+const isAdminRole = (role?: string) => role === "admin" || role === "superadmin";
+
 function LoginForm() {
   const { login, user, loading } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
-  const redirect = params.get("redirect") || "/dashboard";
+  const explicitRedirect = params.get("redirect");
+  const redirect = explicitRedirect || "/dashboard"; // dipakai link "Daftar"
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Tujuan: hormati ?redirect=; jika tidak ada, admin → /admin, lainnya → /dashboard.
+  const destFor = (role?: string) =>
+    explicitRedirect || (isAdminRole(role) ? "/admin" : "/dashboard");
+
   // B: kalau sudah login, jangan tampilkan form — arahkan ke tujuan.
   useEffect(() => {
-    if (!loading && user) router.replace(redirect);
-  }, [loading, user, redirect, router]);
+    if (!loading && user) router.replace(destFor(user.role));
+  }, [loading, user, explicitRedirect, router]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
-      router.push(redirect); // C: kembali ke tujuan, default /dashboard
+      const u = await login(email, password);
+      router.push(destFor(u.role)); // C: admin → /admin, lainnya → /dashboard
     } catch (err) {
       setError(getErrorMessage(err, "Gagal masuk. Coba lagi.")); // D: pesan spesifik
     } finally {

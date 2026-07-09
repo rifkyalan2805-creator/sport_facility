@@ -24,6 +24,10 @@ export class ReportController {
     const data = await this.service.getOccupancy(q.court_id, q.date);
     res.status(HttpStatus.OK).json({ success: true, data });
   });
+
+  getSummary = catchAsync(async (_req: Request, res: Response) => {
+    res.status(HttpStatus.OK).json({ success: true, data: await this.service.getSummary() });
+  });
 }
 
 export const reportController = new ReportController();

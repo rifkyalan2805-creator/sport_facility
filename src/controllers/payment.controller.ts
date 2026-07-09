@@ -32,8 +32,11 @@ export class PaymentController {
 
   list = catchAsync(async (req: Request, res: Response) => {
     const q = req.query as unknown as ListPaymentQuery;
+    // scope=all → semua pembayaran (hanya admin); selain itu terkunci ke user.
+    const isAdmin = req.userRole === 'admin' || req.userRole === 'superadmin';
+    const listAll = isAdmin && q.scope === 'all';
     const result = await this.service.listPayments({
-      userId: req.userId!,
+      userId: listAll ? undefined : req.userId!,
       status: q.status,
       page: q.page,
       limit: q.limit,

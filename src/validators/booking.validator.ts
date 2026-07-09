@@ -37,6 +37,8 @@ export const listBookingQuerySchema = z.object({
   court_id: uuid.optional(),
   status: z.nativeEnum(booking_status).optional(),
   booking_date: dateStr.optional(),
+  // scope=all hanya dihormati untuk admin (dicek di controller).
+  scope: z.enum(['me', 'all']).default('me'),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
 });

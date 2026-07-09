@@ -34,7 +34,7 @@ interface AuthTokens {
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -63,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const d = await apiPost<AuthTokens>("/auth/login", { email, password });
     tokenStore.set(d.accessToken, d.refreshToken);
     setUser(d.user);
+    return d.user;
   }, []);
 
   const register = useCallback(async (input: RegisterInput) => {

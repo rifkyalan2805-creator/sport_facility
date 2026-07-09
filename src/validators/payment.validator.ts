@@ -21,6 +21,8 @@ export const createPaymentSchema = z.object({
 
 export const listPaymentQuerySchema = z.object({
   status: z.nativeEnum(payment_status).optional(),
+  // scope=all hanya dihormati untuk admin (dicek di controller).
+  scope: z.enum(['me', 'all']).default('me'),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
 });

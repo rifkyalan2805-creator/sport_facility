@@ -49,6 +49,14 @@ export default function Navbar() {
           {!loading &&
             (user ? (
               <>
+                {(user.role === "admin" || user.role === "superadmin") && (
+                  <Link
+                    href="/admin"
+                    className="hidden cursor-pointer rounded-full px-4 py-2 text-sm font-semibold text-neon-purple transition-colors duration-200 hover:text-neon-pink sm:inline-flex"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <Link
                   href="/dashboard"
                   className="hidden cursor-pointer rounded-full px-4 py-2 text-sm font-medium text-ink-700 transition-colors duration-200 hover:text-ink-900 sm:inline-flex"

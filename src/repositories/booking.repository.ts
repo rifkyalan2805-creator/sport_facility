@@ -88,7 +88,10 @@ export class BookingRepository {
         orderBy: [{ booking_date: 'desc' }, { start_time: 'desc' }],
         skip: (filter.page - 1) * filter.limit,
         take: filter.limit,
-        include: { courts: { select: { name: true, code: true } } },
+        include: {
+          courts: { select: { name: true, code: true } },
+          users: { select: { full_name: true, email: true } },
+        },
       }),
       db.bookings.count({ where }),
     ]);

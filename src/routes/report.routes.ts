@@ -26,6 +26,16 @@ router.use(...adminOnly);
  *     security: [{ bearerAuth: [] }]
  *     responses: { 201: { description: OK } }
  */
+/**
+ * @openapi
+ * /api/v1/reports/summary:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Ringkasan dashboard admin (kartu + revenue 7 hari)
+ *     security: [{ bearerAuth: [] }]
+ *     responses: { 200: { description: OK } }
+ */
+router.get('/summary', reportController.getSummary);
 router.get('/occupancy', validate(occupancyQuerySchema, 'query'), reportController.getOccupancy);
 router.post('/occupancy', validate(recordOccupancySchema, 'body'), reportController.recordOccupancy);
 

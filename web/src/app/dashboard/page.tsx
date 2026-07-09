@@ -237,6 +237,7 @@ function MembershipsSection() {
 function DashboardContent() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
 
   async function onLogout() {
     await logout();
@@ -271,6 +272,21 @@ function DashboardContent() {
           </div>
         </dl>
       </div>
+
+      {isAdmin && (
+        <Link
+          href="/admin"
+          className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-neon-purple/30 bg-neon-purple/[0.04] p-5 outline-none transition-colors duration-200 hover:border-neon-purple/60 focus-visible:ring-4 focus-visible:ring-neon-purple/30"
+        >
+          <div>
+            <p className="font-semibold text-ink-900">Panel Admin</p>
+            <p className="mt-0.5 text-sm text-ink-500">
+              Kelola registrasi abonemen &amp; data lainnya.
+            </p>
+          </div>
+          <span className="shrink-0 text-sm font-semibold text-neon-purple">Buka →</span>
+        </Link>
+      )}
 
       <BookingsSection />
       <PoolTicketsSection />

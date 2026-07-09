@@ -6,6 +6,7 @@ const detailInclude = {
   payment_items: true,
   invoices: true,
   payment_methods: { select: { name: true, code: true, type: true } },
+  users: { select: { full_name: true, email: true } },
 } satisfies Prisma.paymentsInclude;
 
 /**

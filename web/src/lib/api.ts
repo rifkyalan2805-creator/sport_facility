@@ -106,3 +106,20 @@ export async function apiPatch<T>(
   const res = await api.patch(url, body, config);
   return res.data.data as T;
 }
+
+export async function apiPut<T>(
+  url: string,
+  body?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const res = await api.put(url, body, config);
+  return res.data.data as T;
+}
+
+export async function apiDelete<T = void>(
+  url: string,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const res = await api.delete(url, config);
+  return res.data?.data as T;
+}

@@ -271,6 +271,90 @@ export function useCreateAbonemenRegistration() {
   });
 }
 
+// ---- Admin: ringkasan dashboard ----
+export interface AdminSummary {
+  bookingsToday: number;
+  pendingAbonemen: number;
+  totalBookings: number;
+  revenueTotal: number;
+  revenue7d: { date: string; revenue: number; count: number }[];
+}
+
+export function useAdminSummary() {
+  return useQuery({
+    queryKey: ["admin-summary"],
+    queryFn: () => apiGet<AdminSummary>("/reports/summary"),
+  });
+}
+
+// ---- Admin: transaksi (semua booking & payment) ----
+export interface AdminBooking {
+  id: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  total_price: string;
+  status: string;
+  booking_type: string;
+  courts?: { name: string; code: string } | null;
+  users?: { full_name: string; email: string } | null;
+}
+
+export function useAllBookings(filters: { status?: string; date?: string }) {
+  const qs = new URLSearchParams({ scope: "all", limit: "100" });
+  if (filters.status) qs.set("status", filters.status);
+  if (filters.date) qs.set("booking_date", filters.date);
+  return useQuery({
+    queryKey: ["admin-bookings", filters.status ?? "", filters.date ?? ""],
+    queryFn: () => apiGet<AdminBooking[]>(`/bookings?${qs.toString()}`),
+  });
+}
+
+export interface AdminPayment {
+  id: string;
+  final_amount: string;
+  amount: string;
+  discount_amount: string;
+  status: string;
+  reference_id: string | null;
+  created_at: string;
+  users?: { full_name: string; email: string } | null;
+  invoices?: { invoice_number: string } | null;
+  payment_items?: { item_type: string }[];
+}
+
+export function useAllPayments(filters: { status?: string }) {
+  const qs = new URLSearchParams({ scope: "all", limit: "100" });
+  if (filters.status) qs.set("status", filters.status);
+  return useQuery({
+    queryKey: ["admin-payments", filters.status ?? ""],
+    queryFn: () => apiGet<AdminPayment[]>(`/payments?${qs.toString()}`),
+  });
+}
+
+// ---- Admin: review registrasi abonemen ----
+export function useAdminRegistrations(status?: AbonemenRegistration["status"]) {
+  return useQuery({
+    queryKey: ["admin-registrations", status ?? "all"],
+    queryFn: () =>
+      apiGet<AbonemenRegistration[]>(
+        `/abonemen/registrations${status ? `?status=${status}` : ""}`,
+      ),
+  });
+}
+
+export function useReviewRegistration() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { id: string; action: "approve" | "reject"; notes?: string }) =>
+      apiPatch(`/abonemen/registrations/${v.id}/review`, {
+        action: v.action,
+        notes: v.notes,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-registrations"] }),
+  });
+}
+
 export function useEvents() {
   return useQuery({
     queryKey: ["events"],

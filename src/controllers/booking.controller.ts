@@ -29,8 +29,11 @@ export class BookingController {
 
   list = catchAsync(async (req: Request, res: Response) => {
     const q = req.query as unknown as ListBookingQuery;
+    // scope=all → semua booking (hanya admin); selain itu terkunci ke user.
+    const isAdmin = req.userRole === 'admin' || req.userRole === 'superadmin';
+    const listAll = isAdmin && q.scope === 'all';
     const result = await this.service.listBookings({
-      userId: req.userId!, // user hanya melihat booking miliknya
+      userId: listAll ? undefined : req.userId!,
       courtId: q.court_id,
       status: q.status,
       bookingDate: q.booking_date,
