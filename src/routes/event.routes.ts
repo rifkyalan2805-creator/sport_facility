@@ -7,6 +7,7 @@ import {
   createCategorySchema,
   createEventSchema,
   eventIdParamSchema,
+  eventSlugParamSchema,
   registrationIdParamSchema,
   scanRegistrationSchema,
   updateCategorySchema,
@@ -106,6 +107,8 @@ router.patch(
  *     responses: { 201: { description: Dibuat } }
  */
 router.get('/', eventController.list);
+// Semua event (draft/lampau juga) untuk admin. Literal '/all' sebelum '/:id'.
+router.get('/all', ...adminOnly, eventController.listAll);
 router.post('/', ...adminOnly, validate(createEventSchema, 'body'), eventController.create);
 
 /**
@@ -123,6 +126,8 @@ router.post('/', ...adminOnly, validate(createEventSchema, 'body'), eventControl
  *     parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
  *     responses: { 200: { description: Diperbarui } }
  */
+// Literal '/slug/:slug' sebelum '/:id' (aman: beda arity, tapi eksplisit).
+router.get('/slug/:slug', validate(eventSlugParamSchema, 'params'), eventController.getBySlug);
 router.get('/:id', validate(eventIdParamSchema, 'params'), eventController.getById);
 router.patch(
   '/:id',

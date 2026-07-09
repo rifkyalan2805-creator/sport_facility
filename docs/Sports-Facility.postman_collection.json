@@ -85,6 +85,22 @@
       "key": "membership_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "event_id",
+      "value": ""
+    },
+    {
+      "key": "event_slug",
+      "value": ""
+    },
+    {
+      "key": "event_category_id",
+      "value": ""
+    },
+    {
+      "key": "event_registration_id",
+      "value": ""
     }
   ],
   "item": [
@@ -382,18 +398,37 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "description": "Slot per jam. `booking_type` & `with_light` HANYA berpengaruh untuk lapangan TENIS (harga dari tennis_prices: insidentil/abonemen x lampu). Padel mengabaikannya (off-peak by jam). Nilai with_light harus persis \"true\" atau \"false\".",
             "url": {
               "raw": "{{base_url}}/courts/{{court_id}}/availability?date={{today}}&booking_type=insidentil&with_light=true",
-              "host": ["{{base_url}}"],
-              "path": ["courts", "{{court_id}}", "availability"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "courts",
+                "{{court_id}}",
+                "availability"
+              ],
               "query": [
-                { "key": "date", "value": "{{today}}" },
-                { "key": "booking_type", "value": "insidentil", "description": "insidentil | abonemen (tenis)" },
-                { "key": "with_light", "value": "true", "description": "true | false (tenis)" }
+                {
+                  "key": "date",
+                  "value": "{{today}}"
+                },
+                {
+                  "key": "booking_type",
+                  "value": "insidentil",
+                  "description": "insidentil | abonemen (tenis)"
+                },
+                {
+                  "key": "with_light",
+                  "value": "true",
+                  "description": "true | false (tenis)"
+                }
               ]
             }
           }
@@ -412,18 +447,35 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "description": "Set {{court_id}} ke lapangan TENIS. Harga slot jadi Rp145.000 (dicoret dari Rp155.000).",
             "url": {
               "raw": "{{base_url}}/courts/{{court_id}}/availability?date={{today}}&booking_type=abonemen&with_light=false",
-              "host": ["{{base_url}}"],
-              "path": ["courts", "{{court_id}}", "availability"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "courts",
+                "{{court_id}}",
+                "availability"
+              ],
               "query": [
-                { "key": "date", "value": "{{today}}" },
-                { "key": "booking_type", "value": "abonemen" },
-                { "key": "with_light", "value": "false" }
+                {
+                  "key": "date",
+                  "value": "{{today}}"
+                },
+                {
+                  "key": "booking_type",
+                  "value": "abonemen"
+                },
+                {
+                  "key": "with_light",
+                  "value": "false"
+                }
               ]
             }
           }
@@ -814,14 +866,28 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"items\": [\n    {\n      \"item_type\": \"booking\",\n      \"item_id\": \"{{booking_id}}\",\n      \"item_name\": \"Padel booking\",\n      \"quantity\": 1,\n      \"unit_price\": 150000\n    }\n  ]\n}"
             },
-            "url": { "raw": "{{base_url}}/payments", "host": ["{{base_url}}"], "path": ["payments"] }
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments"
+              ]
+            }
           }
         },
         {
@@ -831,8 +897,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/payments/{{payment_id}}/simulate/success",
-              "host": ["{{base_url}}"],
-              "path": ["payments", "{{payment_id}}", "simulate", "success"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{payment_id}}",
+                "simulate",
+                "success"
+              ]
             }
           }
         },
@@ -840,12 +913,27 @@
           "name": "Simulate Failure (DUMMY)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Disimulasikan gagal\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Disimulasikan gagal\"\n}"
+            },
             "url": {
               "raw": "{{base_url}}/payments/{{payment_id}}/simulate/failure",
-              "host": ["{{base_url}}"],
-              "path": ["payments", "{{payment_id}}", "simulate", "failure"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{payment_id}}",
+                "simulate",
+                "failure"
+              ]
             }
           }
         },
@@ -856,11 +944,21 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/payments?page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["payments"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
               ]
             }
           }
@@ -872,8 +970,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/payments/{{payment_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["payments", "{{payment_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "{{payment_id}}"
+              ]
             }
           }
         }
@@ -897,10 +1000,21 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/pool/sessions", "host": ["{{base_url}}"], "path": ["pool", "sessions"] }
+            "url": {
+              "raw": "{{base_url}}/pool/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pool",
+                "sessions"
+              ]
+            }
           }
         },
         {
@@ -918,10 +1032,21 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/pool/ticket-types", "host": ["{{base_url}}"], "path": ["pool", "ticket-types"] }
+            "url": {
+              "raw": "{{base_url}}/pool/ticket-types",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pool",
+                "ticket-types"
+              ]
+            }
           }
         },
         {
@@ -945,26 +1070,55 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"session_id\": \"{{session_id}}\",\n  \"items\": [\n    {\n      \"ticket_type_id\": \"{{ticket_type_id}}\",\n      \"quantity\": 30\n    }\n  ]\n}"
             },
-            "url": { "raw": "{{base_url}}/pool/checkout", "host": ["{{base_url}}"], "path": ["pool", "checkout"] }
+            "url": {
+              "raw": "{{base_url}}/pool/checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pool",
+                "checkout"
+              ]
+            }
           }
         },
         {
           "name": "Buy Ticket (satuan, tanpa diskon)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"session_id\": \"{{session_id}}\",\n  \"ticket_type_id\": \"{{ticket_type_id}}\",\n  \"quantity\": 2\n}"
             },
-            "url": { "raw": "{{base_url}}/pool/tickets", "host": ["{{base_url}}"], "path": ["pool", "tickets"] }
+            "url": {
+              "raw": "{{base_url}}/pool/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pool",
+                "tickets"
+              ]
+            }
           }
         },
         {
@@ -972,7 +1126,17 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/pool/tickets/me", "host": ["{{base_url}}"], "path": ["pool", "tickets", "me"] }
+            "url": {
+              "raw": "{{base_url}}/pool/tickets/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pool",
+                "tickets",
+                "me"
+              ]
+            }
           }
         },
         {
@@ -982,8 +1146,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/pool/tickets/{{pool_ticket_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["pool", "tickets", "{{pool_ticket_id}}", "cancel"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pool",
+                "tickets",
+                "{{pool_ticket_id}}",
+                "cancel"
+              ]
             }
           }
         }
@@ -1007,10 +1178,21 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/membership/plans", "host": ["{{base_url}}"], "path": ["membership", "plans"] }
+            "url": {
+              "raw": "{{base_url}}/membership/plans",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "membership",
+                "plans"
+              ]
+            }
           }
         },
         {
@@ -1033,14 +1215,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"plan_id\": \"{{plan_id}}\",\n  \"auto_renew\": false\n}"
             },
-            "url": { "raw": "{{base_url}}/membership/subscribe", "host": ["{{base_url}}"], "path": ["membership", "subscribe"] }
+            "url": {
+              "raw": "{{base_url}}/membership/subscribe",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "membership",
+                "subscribe"
+              ]
+            }
           }
         },
         {
@@ -1048,7 +1245,16 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/membership/me", "host": ["{{base_url}}"], "path": ["membership", "me"] }
+            "url": {
+              "raw": "{{base_url}}/membership/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "membership",
+                "me"
+              ]
+            }
           }
         },
         {
@@ -1058,8 +1264,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/membership/{{membership_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["membership", "{{membership_id}}", "cancel"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "membership",
+                "{{membership_id}}",
+                "cancel"
+              ]
             }
           }
         }
@@ -1074,7 +1286,16 @@
             "method": "GET",
             "header": [],
             "description": "Kartu + revenue 7 hari. Admin only.",
-            "url": { "raw": "{{base_url}}/reports/summary", "host": ["{{base_url}}"], "path": ["reports", "summary"] }
+            "url": {
+              "raw": "{{base_url}}/reports/summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "summary"
+              ]
+            }
           }
         }
       ]
@@ -1090,13 +1311,31 @@
             "description": "Semua booking lintas-user. scope=all hanya dihormati untuk admin.",
             "url": {
               "raw": "{{base_url}}/bookings?scope=all&limit=100",
-              "host": ["{{base_url}}"],
-              "path": ["bookings"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings"
+              ],
               "query": [
-                { "key": "scope", "value": "all" },
-                { "key": "limit", "value": "100" },
-                { "key": "status", "value": "confirmed", "disabled": true },
-                { "key": "booking_date", "value": "", "disabled": true }
+                {
+                  "key": "scope",
+                  "value": "all"
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                },
+                {
+                  "key": "status",
+                  "value": "confirmed",
+                  "disabled": true
+                },
+                {
+                  "key": "booking_date",
+                  "value": "",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -1108,12 +1347,26 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/payments?scope=all&limit=100",
-              "host": ["{{base_url}}"],
-              "path": ["payments"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments"
+              ],
               "query": [
-                { "key": "scope", "value": "all" },
-                { "key": "limit", "value": "100" },
-                { "key": "status", "value": "paid", "disabled": true }
+                {
+                  "key": "scope",
+                  "value": "all"
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                },
+                {
+                  "key": "status",
+                  "value": "paid",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -1128,28 +1381,61 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/settings", "host": ["{{base_url}}"], "path": ["settings"] }
+            "url": {
+              "raw": "{{base_url}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            }
           }
         },
         {
           "name": "Get Setting (pool_group_discount)",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/settings/pool_group_discount", "host": ["{{base_url}}"], "path": ["settings", "pool_group_discount"] }
+            "url": {
+              "raw": "{{base_url}}/settings/pool_group_discount",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "settings",
+                "pool_group_discount"
+              ]
+            }
           }
         },
         {
           "name": "Update Setting (pool_group_discount)",
           "request": {
             "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"value\": {\n    \"tiers\": [\n      { \"minQty\": 15, \"percent\": 10 },\n      { \"minQty\": 30, \"percent\": 12.5 },\n      { \"minQty\": 50, \"percent\": 20 }\n    ]\n  }\n}"
             },
-            "url": { "raw": "{{base_url}}/settings/pool_group_discount", "host": ["{{base_url}}"], "path": ["settings", "pool_group_discount"] }
+            "url": {
+              "raw": "{{base_url}}/settings/pool_group_discount",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "settings",
+                "pool_group_discount"
+              ]
+            }
           }
         }
       ]
@@ -1160,31 +1446,67 @@
         {
           "name": "List Banners",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/cms/banners", "host": ["{{base_url}}"], "path": ["cms", "banners"] }
+            "url": {
+              "raw": "{{base_url}}/cms/banners",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cms",
+                "banners"
+              ]
+            }
           }
         },
         {
           "name": "List FAQs",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/cms/faqs", "host": ["{{base_url}}"], "path": ["cms", "faqs"] }
+            "url": {
+              "raw": "{{base_url}}/cms/faqs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cms",
+                "faqs"
+              ]
+            }
           }
         },
         {
           "name": "Create FAQ (admin)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"question\": \"Bagaimana cara booking?\",\n  \"answer\": \"Pilih lapangan, tanggal, lalu slot.\",\n  \"category\": \"general\"\n}"
             },
-            "url": { "raw": "{{base_url}}/cms/faqs", "host": ["{{base_url}}"], "path": ["cms", "faqs"] }
+            "url": {
+              "raw": "{{base_url}}/cms/faqs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cms",
+                "faqs"
+              ]
+            }
           }
         }
       ]
@@ -1197,19 +1519,376 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/promos", "host": ["{{base_url}}"], "path": ["promos"] }
+            "url": {
+              "raw": "{{base_url}}/promos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "promos"
+              ]
+            }
           }
         },
         {
           "name": "Create Promo (admin)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"code\": \"HEMAT10\",\n  \"name\": \"Diskon 10%\",\n  \"type\": \"percentage\",\n  \"discount_value\": 10,\n  \"min_purchase\": 100000,\n  \"quota\": 100,\n  \"applicable_to\": [\"all\"],\n  \"valid_from\": \"2026-01-01T00:00\",\n  \"valid_until\": \"2027-01-01T00:00\"\n}"
             },
-            "url": { "raw": "{{base_url}}/promos", "host": ["{{base_url}}"], "path": ["promos"] }
+            "url": {
+              "raw": "{{base_url}}/promos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "promos"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "description": "Katalog & registrasi event. Publik: list, detail, kategori. Ber-auth: register, my, cancel.",
+      "item": [
+        {
+          "name": "List Events (publik)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d=pm.response.json().data||[];",
+                  "if(d[0]){pm.collectionVariables.set(\"event_id\",d[0].id);pm.collectionVariables.set(\"event_slug\",d[0].slug);}",
+                  "console.log(\"events:\",d.length);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "List Categories (publik)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d=pm.response.json().data||[];",
+                  "if(d[0])pm.collectionVariables.set(\"event_category_id\",d[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "categories"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Detail by Slug (publik)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/slug/{{event_slug}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "slug",
+                "{{event_slug}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Register Event (gratis→confirmed / berbayar→+payment)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d=(pm.response.json()||{}).data||{};",
+                  "if(d.registration)pm.collectionVariables.set(\"event_registration_id\",d.registration.id);",
+                  "if(d.payment)pm.collectionVariables.set(\"payment_id\",d.payment.id);",
+                  "console.log(\"status:\",d.registration&&d.registration.status,\"payment:\",d.payment?d.payment.id:\"(gratis)\");"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/{{event_id}}/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "{{event_id}}",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "My Registrations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/registrations/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "registrations",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Registration",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/registrations/{{event_registration_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "registrations",
+                "{{event_registration_id}}",
+                "cancel"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin · Events",
+      "description": "Kelola event & kategori (role admin/superadmin). Check-in QR: staff/admin.",
+      "item": [
+        {
+          "name": "Create Category (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d=(pm.response.json()||{}).data;if(d)pm.collectionVariables.set(\"event_category_id\",d.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "categories"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Turnamen\",\n  \"color\": \"#e11d48\",\n  \"icon\": \"trophy\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Category (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events/categories/{{event_category_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "categories",
+                "{{event_category_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"color\": \"#6366f1\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Event (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d=(pm.response.json()||{}).data;if(d){pm.collectionVariables.set(\"event_id\",d.id);pm.collectionVariables.set(\"event_slug\",d.slug);}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": \"{{event_category_id}}\",\n  \"title\": \"Turnamen Padel Terbuka\",\n  \"description\": \"Turnamen amatir.\",\n  \"event_date\": \"2026-12-20T09:00:00.000Z\",\n  \"location\": \"GOR Utama\",\n  \"quota\": 24,\n  \"price\": 150000,\n  \"organizer_name\": \"Panitia\",\n  \"status\": \"published\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List All Events (admin, incl draft/lampau)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "all"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Event (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events/{{event_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "{{event_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 175000,\n  \"status\": \"published\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Check-in via QR (staff/admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events/registrations/scan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "registrations",
+                "scan"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qr_code\": \"EVT-xxxxxxxx\"\n}"
+            }
           }
         }
       ]

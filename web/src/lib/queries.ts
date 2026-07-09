@@ -55,13 +55,35 @@ export interface Booking {
   courts?: { name: string; code: string } | null;
 }
 
+export interface EventCategoryRef {
+  name: string;
+  slug: string;
+  color: string | null;
+}
+
 export interface EventItem {
   id: string;
   title: string;
   slug: string;
+  description: string | null;
+  banner_url: string | null;
   event_date: string;
+  end_date: string | null;
   location: string | null;
   price: string;
+  quota: number;
+  registered_count: number;
+  organizer_name: string | null;
+  registration_deadline: string | null;
+  category_id: string;
+  event_categories?: EventCategoryRef | null;
+}
+
+export interface EventCategory {
+  id: string;
+  name: string;
+  slug: string;
+  color: string | null;
 }
 
 // Hook data siap pakai (publik — tanpa auth).
@@ -359,6 +381,67 @@ export function useEvents() {
   return useQuery({
     queryKey: ["events"],
     queryFn: () => apiGet<EventItem[]>("/events"),
+  });
+}
+
+export function useEventCategories() {
+  return useQuery({
+    queryKey: ["event-categories"],
+    queryFn: () => apiGet<EventCategory[]>("/events/categories"),
+  });
+}
+
+export function useEvent(slug: string) {
+  return useQuery({
+    queryKey: ["event", slug],
+    queryFn: () => apiGet<EventItem>(`/events/slug/${slug}`),
+    enabled: Boolean(slug),
+  });
+}
+
+export interface EventRegistration {
+  id: string;
+  event_id: string;
+  status: "registered" | "confirmed" | "checked_in" | "cancelled" | "waitlisted";
+  qr_code?: string;
+  created_at: string;
+  events?: { title: string; event_date: string } | null;
+}
+
+export function useMyEventRegistrations(enabled = true) {
+  return useQuery({
+    queryKey: ["my-event-registrations"],
+    queryFn: () => apiGet<EventRegistration[]>("/events/registrations/me"),
+    enabled,
+  });
+}
+
+export interface RegisterEventResult {
+  registration: { id: string; status: string };
+  payment: { id: string } | null;
+}
+
+export function useRegisterEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (eventId: string) =>
+      apiPost<RegisterEventResult>(`/events/${eventId}/register`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-event-registrations"] });
+      qc.invalidateQueries({ queryKey: ["events"] });
+      qc.invalidateQueries({ queryKey: ["event"] });
+    },
+  });
+}
+
+export function useCancelEventRegistration() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiPatch(`/events/registrations/${id}/cancel`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-event-registrations"] });
+      qc.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 

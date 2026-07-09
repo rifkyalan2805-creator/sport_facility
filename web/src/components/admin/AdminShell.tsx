@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/pool", label: "Kolam" },
   { href: "/admin/pricing", label: "Harga" },
   { href: "/admin/membership", label: "Membership" },
+  { href: "/admin/events", label: "Event" },
   { href: "/admin/promo", label: "Promo" },
   { href: "/admin/cms", label: "Konten" },
   { href: "/admin/settings", label: "Pengaturan" },

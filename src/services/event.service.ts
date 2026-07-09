@@ -73,6 +73,12 @@ export class EventService {
     return event;
   }
 
+  async getEventBySlug(slug: string) {
+    const event = await this.events.findBySlug(slug);
+    if (!event) throw AppError.notFound('Event tidak ditemukan');
+    return event;
+  }
+
   createEvent(input: CreateEventInput) {
     const data: Prisma.eventsUncheckedCreateInput = {
       category_id: input.categoryId,

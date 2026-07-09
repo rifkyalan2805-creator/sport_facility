@@ -47,8 +47,18 @@ export class EventController {
     res.status(HttpStatus.OK).json({ success: true, data });
   });
 
+  listAll = catchAsync(async (_req: Request, res: Response) => {
+    const data = await this.service.listAllEvents();
+    res.status(HttpStatus.OK).json({ success: true, data });
+  });
+
   getById = catchAsync(async (req: Request, res: Response) => {
     const data = await this.service.getEvent(req.params.id);
+    res.status(HttpStatus.OK).json({ success: true, data });
+  });
+
+  getBySlug = catchAsync(async (req: Request, res: Response) => {
+    const data = await this.service.getEventBySlug(req.params.slug);
     res.status(HttpStatus.OK).json({ success: true, data });
   });
 

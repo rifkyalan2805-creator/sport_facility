@@ -12,11 +12,21 @@ export class EventRepository {
   }
 
   listAll(db: DbClient = prisma) {
-    return db.events.findMany({ orderBy: { event_date: 'desc' } });
+    return db.events.findMany({
+      orderBy: { event_date: 'desc' },
+      include: { event_categories: { select: { name: true, slug: true, color: true } } },
+    });
   }
 
   findById(id: string, db: DbClient = prisma) {
     return db.events.findUnique({ where: { id } });
+  }
+
+  findBySlug(slug: string, db: DbClient = prisma) {
+    return db.events.findUnique({
+      where: { slug },
+      include: { event_categories: { select: { name: true, slug: true, color: true } } },
+    });
   }
 
   create(data: Prisma.eventsUncheckedCreateInput, db: DbClient = prisma) {

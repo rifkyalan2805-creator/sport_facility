@@ -11,9 +11,12 @@ import {
   useCancelPoolTicket,
   useMyMemberships,
   useCancelMembership,
+  useMyEventRegistrations,
+  useCancelEventRegistration,
   type Booking,
   type PoolTicket,
   type Membership,
+  type EventRegistration,
 } from "@/lib/queries";
 import { formatRupiah, formatDateID, formatTimeISO } from "@/lib/format";
 
@@ -234,6 +237,64 @@ function MembershipsSection() {
   );
 }
 
+const EVENT_STATUS: Record<EventRegistration["status"], { label: string; cls: string }> = {
+  registered: { label: "Menunggu bayar", cls: "bg-amber-100 text-amber-700" },
+  confirmed: { label: "Terkonfirmasi", cls: "bg-green-100 text-green-700" },
+  checked_in: { label: "Check-in", cls: "bg-blue-100 text-blue-700" },
+  waitlisted: { label: "Daftar tunggu", cls: "bg-ink-900/10 text-ink-700" },
+  cancelled: { label: "Dibatalkan", cls: "bg-red-100 text-red-600" },
+};
+const EVENT_CANCELLABLE: EventRegistration["status"][] = ["registered", "confirmed"];
+
+function EventsSection() {
+  const { data: regs = [], isLoading } = useMyEventRegistrations();
+  const cancel = useCancelEventRegistration();
+  if (!isLoading && regs.length === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-lg font-semibold text-ink-900">Event Saya</h2>
+      {isLoading ? (
+        <div className="mt-4 h-20 animate-pulse rounded-2xl bg-ink-900/5" />
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {regs.map((r) => {
+            const s = EVENT_STATUS[r.status] ?? EVENT_STATUS.registered;
+            return (
+              <li
+                key={r.id}
+                className="flex flex-col gap-3 rounded-2xl border border-ink-900/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-ink-900">{r.events?.title ?? "Event"}</p>
+                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.cls}`}>
+                      {s.label}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-ink-500">
+                    {r.events?.event_date ? formatDateID(r.events.event_date) : "—"}
+                  </p>
+                </div>
+                {EVENT_CANCELLABLE.includes(r.status) && (
+                  <button
+                    type="button"
+                    onClick={() => window.confirm("Batalkan registrasi event ini?") && cancel.mutate(r.id)}
+                    disabled={cancel.isPending && cancel.variables === r.id}
+                    className="text-sm font-medium text-ink-400 outline-none transition-colors hover:text-red-600 focus-visible:text-red-600 disabled:opacity-50"
+                  >
+                    {cancel.isPending && cancel.variables === r.id ? "Membatalkan…" : "Batalkan"}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function DashboardContent() {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -291,6 +352,7 @@ function DashboardContent() {
       <BookingsSection />
       <PoolTicketsSection />
       <MembershipsSection />
+      <EventsSection />
 
       <button
         onClick={onLogout}

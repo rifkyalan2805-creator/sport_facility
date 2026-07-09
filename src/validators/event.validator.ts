@@ -63,6 +63,7 @@ export const scanRegistrationSchema = z.object({
 });
 
 export const eventIdParamSchema = z.object({ id: uuid });
+export const eventSlugParamSchema = z.object({ slug: z.string().min(1).max(250) });
 export const categoryIdParamSchema = z.object({ id: uuid });
 export const registrationIdParamSchema = z.object({ id: uuid });
 
