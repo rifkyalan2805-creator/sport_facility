@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PageNav from "@/components/PageNav";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -368,6 +369,7 @@ function DashboardContent() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-20">
+      <PageNav className="mb-8" />
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">
         Dashboard
       </p>
