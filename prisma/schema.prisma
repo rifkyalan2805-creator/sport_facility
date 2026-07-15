@@ -390,6 +390,12 @@ enum membership_status {
   pending
 }
 
+enum gender {
+  laki_laki
+  perempuan
+  lainnya
+}
+
 model membership_plans {
   id                 String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name               String   @db.VarChar(100)
@@ -417,6 +423,19 @@ model user_memberships {
   status     membership_status @default(pending)
   auto_renew Boolean           @default(false)
   notes      String?
+
+  // Data member (registrasi lengkap → dipakai member card)
+  member_name         String?   @db.VarChar(150)
+  birth_date          DateTime? @db.Date
+  gender              gender?
+  city                String?   @db.VarChar(120)
+  photo_url           String?
+  medical_notes       String?
+  terms_accepted_at   DateTime? @db.Timestamptz(6)
+  marketing_opt_in    Boolean   @default(false)
+  marketing_opt_in_at DateTime? @db.Timestamptz(6)
+  card_number         String?   @unique @db.VarChar(40)
+
   created_at DateTime          @default(now()) @db.Timestamptz(6)
   updated_at DateTime          @default(now()) @db.Timestamptz(6)
 

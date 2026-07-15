@@ -19,6 +19,7 @@ import settingRoutes from './setting.routes';
 import cmsRoutes from './cms.routes';
 import pricingRoutes from './pricing.routes';
 import abonemenRoutes from './abonemen.routes';
+import uploadRoutes from './upload.routes';
 
 const router = Router();
 
@@ -43,5 +44,6 @@ router.use('/settings', settingRoutes);
 router.use('/cms', cmsRoutes);
 router.use('/pricing', pricingRoutes);
 router.use('/abonemen', abonemenRoutes);
+router.use('/uploads', uploadRoutes);
 
 export default router;
