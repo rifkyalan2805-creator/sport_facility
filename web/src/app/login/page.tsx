@@ -49,7 +49,7 @@ function LoginForm() {
 
   return (
     <main className="relative grid min-h-screen place-items-center bg-white px-6">
-      <PageNav className="absolute left-6 top-6" />
+      <PageNav variant="cta" className="absolute left-6 top-6" />
       <form onSubmit={onSubmit} className="w-full max-w-sm">
         <Link href="/" className="mb-8 flex items-center gap-2">
           <span className="h-5 w-5 rounded-md bg-gradient-to-br from-neon-pink via-neon-purple to-neon-blue" />

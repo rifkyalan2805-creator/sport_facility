@@ -1,0 +1,107 @@
+/* Tombol "Kembali" neo-brutalist (skew + shadow keras + panah beranimasi).
+   Warna diselaraskan ke palet app: neon-purple / neon-pink / ink-900. */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 26px;
+  font-size: 18px;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  color: #fff;
+  background: #8b5cf6; /* neon-purple */
+  border: none;
+  cursor: pointer;
+  transition: 1s;
+  box-shadow: 4px 4px 0 #0a0a0b; /* ink-900 */
+  transform: skewX(-15deg);
+}
+
+.cta:focus-visible {
+  outline: 3px solid rgba(139, 92, 246, 0.45);
+  outline-offset: 3px;
+}
+
+.cta:hover {
+  transition: 0.5s;
+  box-shadow: 7px 7px 0 #ff2d92; /* neon-pink */
+}
+
+.cta span {
+  display: inline-flex;
+  align-items: center;
+  transform: skewX(15deg);
+}
+
+.arrow {
+  position: relative;
+  top: 1px;
+  width: 14px;
+  margin-right: 16px;
+  transition: 0.5s;
+}
+
+.cta:hover .arrow {
+  transition: 0.5s;
+  margin-left: 26px;
+}
+
+.cta svg {
+  display: block;
+  width: 40px;
+  height: auto;
+  transform: scaleX(-1); /* chevron menghadap kiri (<<) */
+}
+
+.one {
+  transition: 0.4s;
+  transform: translateX(-60%);
+}
+
+.two {
+  transition: 0.5s;
+  transform: translateX(-30%);
+}
+
+.cta:hover .three {
+  animation: color_anim 1s infinite 0.2s;
+}
+
+.cta:hover .one {
+  transform: translateX(0%);
+  animation: color_anim 1s infinite 0.6s;
+}
+
+.cta:hover .two {
+  transform: translateX(0%);
+  animation: color_anim 1s infinite 0.4s;
+}
+
+@keyframes color_anim {
+  0% {
+    fill: #fff;
+  }
+  50% {
+    fill: #ff2d92; /* neon-pink */
+  }
+  100% {
+    fill: #fff;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta,
+  .cta:hover,
+  .arrow {
+    transition: none;
+  }
+  .one,
+  .two {
+    transform: translateX(0%);
+  }
+  .cta:hover .one,
+  .cta:hover .two,
+  .cta:hover .three {
+    animation: none;
+  }
+}

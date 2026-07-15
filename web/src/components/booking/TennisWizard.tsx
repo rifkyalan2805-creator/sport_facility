@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
+import PageNav from "@/components/PageNav";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useTennisCourts,
@@ -220,6 +221,7 @@ export default function TennisWizard() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 pb-40 pt-28">
+      <PageNav variant="cta" className="mb-6" />
       <header className="max-w-2xl">
         <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">
           <span className="h-1.5 w-1.5 rounded-full bg-neon-purple" />

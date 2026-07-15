@@ -15,6 +15,7 @@ import ScheduleGrid from "./ScheduleGrid";
 import SummaryBar from "./SummaryBar";
 import CheckoutPanel from "./CheckoutPanel";
 import WaitlistDialog from "./WaitlistDialog";
+import PageNav from "@/components/PageNav";
 
 function StepLabel({ n, title }: { n: number; title: string }) {
   return (
@@ -168,6 +169,7 @@ export default function PadelBooking() {
   return (
     <>
       <div className="mx-auto max-w-6xl px-6 pb-40 pt-28">
+        <PageNav variant="cta" className="mb-6" />
         {/* Header */}
         <header className="max-w-2xl">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">

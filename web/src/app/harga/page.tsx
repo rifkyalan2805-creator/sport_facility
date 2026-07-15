@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageNav from "@/components/PageNav";
 import { usePricing, useMembershipPlans } from "@/lib/queries";
 import { formatRupiah } from "@/lib/format";
 
@@ -45,6 +46,7 @@ export default function HargaPage() {
     <>
       <Navbar />
       <main className="mx-auto max-w-5xl px-6 pb-24 pt-32">
+        <PageNav variant="cta" className="mb-6" />
         {/* Header */}
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">

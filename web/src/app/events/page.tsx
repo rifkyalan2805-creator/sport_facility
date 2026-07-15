@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageNav from "@/components/PageNav";
 import EventCard from "@/components/events/EventCard";
 import { useEvents, useEventCategories } from "@/lib/queries";
 
@@ -20,6 +21,7 @@ export default function EventsPage() {
     <>
       <Navbar />
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-32">
+        <PageNav variant="cta" className="mb-6" />
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">
             <span className="h-1.5 w-1.5 rounded-full bg-neon-pink" />
