@@ -101,16 +101,29 @@ export class MembershipService {
     const plan = await this.plans.findActiveById(input.planId);
     if (!plan) throw AppError.notFound('Plan tidak ditemukan atau tidak aktif');
 
+    // Consent S&K + waiver wajib disetujui.
+    if (!input.termsAccepted) {
+      throw AppError.unprocessable(
+        'Anda harus menyetujui Syarat & Ketentuan dan waiver risiko'
+      );
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    if (input.startDate < today) {
+      throw AppError.badRequest('start_date tidak boleh di masa lalu');
+    }
+
     const existing = await this.memberships.findActiveOrPending(input.userId);
     if (existing) {
       throw AppError.conflict('Anda masih memiliki membership aktif atau menunggu pembayaran');
     }
 
-    // Periode tentatif; di-set ulang saat aktivasi pembayaran.
-    const startDate = new Date(new Date().toISOString().slice(0, 10));
+    // Tanggal mulai manual; expired = mulai + durasi paket (tidak ditimpa saat aktivasi).
+    const startDate = new Date(input.startDate);
     const endDate = new Date(startDate);
     endDate.setUTCDate(endDate.getUTCDate() + plan.duration_days);
 
+    const now = new Date();
     const membership = await this.memberships.create({
       user_id: input.userId,
       plan_id: plan.id,
@@ -118,6 +131,15 @@ export class MembershipService {
       end_date: endDate,
       status: 'pending',
       auto_renew: input.autoRenew,
+      member_name: input.memberName,
+      birth_date: new Date(input.birthDate),
+      gender: input.gender,
+      city: input.city,
+      photo_url: input.photoUrl,
+      medical_notes: input.medicalNotes ?? null,
+      terms_accepted_at: now,
+      marketing_opt_in: input.marketingOptIn,
+      marketing_opt_in_at: input.marketingOptIn ? now : null,
     });
 
     const payment = await this.payments.createPayment({

@@ -32,9 +32,21 @@ export const updatePlanSchema = z
     message: 'Minimal satu field untuk diupdate',
   });
 
+const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Tanggal harus berformat YYYY-MM-DD');
+
 export const subscribeSchema = z.object({
   plan_id: uuid,
   auto_renew: z.boolean().default(false),
+  // Data member (untuk member card)
+  member_name: z.string().min(1).max(150),
+  birth_date: dateStr,
+  gender: z.enum(['laki_laki', 'perempuan', 'lainnya']),
+  city: z.string().min(1).max(120),
+  photo_url: z.string().regex(/^\/uploads\//, 'photo_url harus hasil unggah (mulai dari /uploads/)'),
+  medical_notes: z.string().max(2000).optional(),
+  start_date: dateStr, // end_date dihitung server = start + durasi paket
+  terms_accepted: z.boolean().default(false), // wajib true — ditegakkan di service (422)
+  marketing_opt_in: z.boolean().default(false),
 });
 
 export const planIdParamSchema = z.object({ id: uuid });

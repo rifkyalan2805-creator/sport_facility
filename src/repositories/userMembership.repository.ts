@@ -32,6 +32,11 @@ export class UserMembershipRepository {
     });
   }
 
+  /** Cek keunikan nomor kartu (dipakai saat generate card_number). */
+  findByCardNumber(cardNumber: string, db: DbClient = prisma) {
+    return db.user_memberships.findFirst({ where: { card_number: cardNumber } });
+  }
+
   update(
     id: string,
     data: Prisma.user_membershipsUncheckedUpdateInput,

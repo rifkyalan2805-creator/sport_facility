@@ -64,18 +64,40 @@ describe('MembershipService.createPlan', () => {
   });
 });
 
+const fullSub = (o: Record<string, unknown> = {}) => ({
+  userId: 'u1',
+  planId: 'plan1',
+  autoRenew: false,
+  memberName: 'Budi',
+  birthDate: '1990-05-01',
+  gender: 'laki_laki' as const,
+  city: 'Jakarta',
+  photoUrl: '/uploads/member-photos/x.png',
+  medicalNotes: undefined,
+  startDate: '2999-01-10', // masa depan → lolos guard tanggal lampau
+  termsAccepted: true,
+  marketingOptIn: false,
+  ...o,
+});
+
 describe('MembershipService.subscribe', () => {
-  it('membuat membership pending + payment dummy', async () => {
+  it('membuat membership pending + simpan data member + payment dummy', async () => {
     const { service, plans, memberships, payments } = build();
     (plans.findActiveById as jest.Mock).mockResolvedValue(plan);
     (memberships.findActiveOrPending as jest.Mock).mockResolvedValue(null);
     (memberships.create as jest.Mock).mockResolvedValue({ id: 'um1' });
     (payments.createPayment as jest.Mock).mockResolvedValue({ id: 'pay1', status: 'pending' });
 
-    const result = await service.subscribe({ userId: 'u1', planId: 'plan1', autoRenew: false });
+    const result = await service.subscribe(fullSub());
 
     const createArg = (memberships.create as jest.Mock).mock.calls[0][0];
     expect(createArg.status).toBe('pending');
+    expect(createArg.member_name).toBe('Budi');
+    expect(createArg.photo_url).toBe('/uploads/member-photos/x.png');
+    expect(createArg.terms_accepted_at).toBeInstanceOf(Date);
+    expect(createArg.marketing_opt_in_at).toBeNull(); // opt-out → null
+    // end = start + durasi paket (30 hari)
+    expect(createArg.end_date.getTime() - createArg.start_date.getTime()).toBe(30 * 86400000);
     expect(payments.createPayment).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'u1',
@@ -85,13 +107,42 @@ describe('MembershipService.subscribe', () => {
     expect(result).toEqual({ membership: { id: 'um1' }, payment: { id: 'pay1', status: 'pending' } });
   });
 
+  it('mengisi marketing_opt_in_at saat opt-in', async () => {
+    const { service, plans, memberships, payments } = build();
+    (plans.findActiveById as jest.Mock).mockResolvedValue(plan);
+    (memberships.findActiveOrPending as jest.Mock).mockResolvedValue(null);
+    (memberships.create as jest.Mock).mockResolvedValue({ id: 'um1' });
+    (payments.createPayment as jest.Mock).mockResolvedValue({ id: 'pay1' });
+
+    await service.subscribe(fullSub({ marketingOptIn: true }));
+    const createArg = (memberships.create as jest.Mock).mock.calls[0][0];
+    expect(createArg.marketing_opt_in).toBe(true);
+    expect(createArg.marketing_opt_in_at).toBeInstanceOf(Date);
+  });
+
+  it('menolak (422) jika consent S&K tidak disetujui', async () => {
+    const { service, plans } = build();
+    (plans.findActiveById as jest.Mock).mockResolvedValue(plan);
+
+    await expect(service.subscribe(fullSub({ termsAccepted: false }))).rejects.toMatchObject({
+      statusCode: 422,
+    });
+  });
+
+  it('menolak (400) jika start_date di masa lalu', async () => {
+    const { service, plans } = build();
+    (plans.findActiveById as jest.Mock).mockResolvedValue(plan);
+
+    await expect(service.subscribe(fullSub({ startDate: '2000-01-01' }))).rejects.toMatchObject({
+      statusCode: 400,
+    });
+  });
+
   it('menolak (404) jika plan tidak ada/aktif', async () => {
     const { service, plans } = build();
     (plans.findActiveById as jest.Mock).mockResolvedValue(null);
 
-    await expect(
-      service.subscribe({ userId: 'u1', planId: 'x', autoRenew: false })
-    ).rejects.toMatchObject({ statusCode: 404 });
+    await expect(service.subscribe(fullSub({ planId: 'x' }))).rejects.toMatchObject({ statusCode: 404 });
   });
 
   it('menolak (409) jika sudah ada membership aktif/pending', async () => {
@@ -99,9 +150,7 @@ describe('MembershipService.subscribe', () => {
     (plans.findActiveById as jest.Mock).mockResolvedValue(plan);
     (memberships.findActiveOrPending as jest.Mock).mockResolvedValue({ id: 'existing' });
 
-    await expect(
-      service.subscribe({ userId: 'u1', planId: 'plan1', autoRenew: false })
-    ).rejects.toMatchObject({ statusCode: 409 });
+    await expect(service.subscribe(fullSub())).rejects.toMatchObject({ statusCode: 409 });
   });
 });
 

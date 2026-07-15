@@ -37,26 +37,36 @@ describe('BookingFulfillmentHandler', () => {
 });
 
 describe('MembershipFulfillmentHandler', () => {
-  it('onPaid: aktifkan membership pending', async () => {
-    const memberships = { findByIdWithPlan: jest.fn(), update: jest.fn() } as unknown as jest.Mocked<UserMembershipRepository>;
+  it('onPaid: aktifkan + set card_number, tanpa menimpa tanggal', async () => {
+    const memberships = {
+      findByIdWithPlan: jest.fn(),
+      findByCardNumber: jest.fn(),
+      update: jest.fn(),
+    } as unknown as jest.Mocked<UserMembershipRepository>;
     (memberships.findByIdWithPlan as jest.Mock).mockResolvedValue({
       id: 'm1',
       status: 'pending',
       membership_plans: { duration_days: 30 },
     });
+    (memberships.findByCardNumber as jest.Mock).mockResolvedValue(null); // nomor unik
     const h = new MembershipFulfillmentHandler(memberships);
 
     await h.onPaid({ itemType: 'membership', itemId: 'm1', quantity: 1 }, tx);
 
-    expect(memberships.update).toHaveBeenCalledWith(
-      'm1',
-      expect.objectContaining({ status: 'active' }),
-      tx
-    );
+    const arg = (memberships.update as jest.Mock).mock.calls[0][1];
+    expect(arg.status).toBe('active');
+    expect(arg.card_number).toMatch(/^MBR-[A-Z0-9]+$/);
+    // Tanggal manual tidak boleh disentuh saat aktivasi.
+    expect(arg.start_date).toBeUndefined();
+    expect(arg.end_date).toBeUndefined();
   });
 
   it('onPaid: tidak menggandakan aktivasi jika sudah active', async () => {
-    const memberships = { findByIdWithPlan: jest.fn(), update: jest.fn() } as unknown as jest.Mocked<UserMembershipRepository>;
+    const memberships = {
+      findByIdWithPlan: jest.fn(),
+      findByCardNumber: jest.fn(),
+      update: jest.fn(),
+    } as unknown as jest.Mocked<UserMembershipRepository>;
     (memberships.findByIdWithPlan as jest.Mock).mockResolvedValue({ id: 'm1', status: 'active', membership_plans: { duration_days: 30 } });
     const h = new MembershipFulfillmentHandler(memberships);
 

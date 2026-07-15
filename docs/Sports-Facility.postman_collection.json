@@ -105,6 +105,10 @@
     {
       "key": "waiting_id",
       "value": ""
+    },
+    {
+      "key": "member_photo_url",
+      "value": ""
     }
   ],
   "item": [
@@ -1168,6 +1172,45 @@
       "name": "Membership",
       "item": [
         {
+          "name": "Upload Foto Member",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d=(pm.response.json()||{}).data;",
+                  "if(d&&d.url){pm.collectionVariables.set(\"member_photo_url\", d.url);console.log(\"member_photo_url:\", d.url);}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photo",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/uploads/member-photo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "uploads",
+                "member-photo"
+              ]
+            }
+          }
+        },
+        {
           "name": "List Plans (publik)",
           "event": [
             {
@@ -1230,7 +1273,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"plan_id\": \"{{plan_id}}\",\n  \"auto_renew\": false\n}"
+              "raw": "{\n  \"plan_id\": \"{{plan_id}}\",\n  \"auto_renew\": false,\n  \"member_name\": \"Budi Santoso\",\n  \"birth_date\": \"1992-08-20\",\n  \"gender\": \"laki_laki\",\n  \"city\": \"Bandung\",\n  \"photo_url\": \"{{member_photo_url}}\",\n  \"medical_notes\": \"Asma ringan\",\n  \"start_date\": \"2026-09-01\",\n  \"terms_accepted\": true,\n  \"marketing_opt_in\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/membership/subscribe",

@@ -69,6 +69,15 @@ export class MembershipController {
       userId: req.userId!,
       planId: b.plan_id,
       autoRenew: b.auto_renew,
+      memberName: b.member_name,
+      birthDate: b.birth_date,
+      gender: b.gender,
+      city: b.city,
+      photoUrl: b.photo_url,
+      medicalNotes: b.medical_notes,
+      startDate: b.start_date,
+      termsAccepted: b.terms_accepted,
+      marketingOptIn: b.marketing_opt_in,
     });
     res.status(HttpStatus.CREATED).json({ success: true, data });
   });
