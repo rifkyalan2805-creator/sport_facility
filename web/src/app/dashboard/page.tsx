@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageNav from "@/components/PageNav";
+import MemberCard from "@/components/membership/MemberCard";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -196,9 +197,24 @@ function MembershipsSection() {
   const cancel = useCancelMembership();
   if (!isLoading && memberships.length === 0) return null;
 
+  const active = memberships.find((m) => m.status === "active");
+
   return (
     <section className="mt-10">
       <h2 className="text-lg font-semibold text-ink-900">Membership Saya</h2>
+      {active && (
+        <div className="mt-4">
+          <MemberCard
+            memberName={active.member_name ?? "Member"}
+            planName={active.membership_plans?.name ?? "Membership"}
+            photoUrl={active.photo_url}
+            cardNumber={active.card_number}
+            startDate={active.start_date}
+            endDate={active.end_date}
+            status={active.status}
+          />
+        </div>
+      )}
       {isLoading ? (
         <div className="mt-4 h-20 animate-pulse rounded-2xl bg-ink-900/5" />
       ) : (
@@ -369,7 +385,7 @@ function DashboardContent() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-20">
-      <PageNav className="mb-8" />
+      <PageNav variant="cta" className="mb-8" />
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">
         Dashboard
       </p>

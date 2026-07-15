@@ -217,6 +217,9 @@ export interface Membership {
   start_date: string;
   end_date: string;
   auto_renew: boolean;
+  member_name?: string | null;
+  photo_url?: string | null;
+  card_number?: string | null;
   membership_plans?: { name: string; slug: string } | null;
 }
 

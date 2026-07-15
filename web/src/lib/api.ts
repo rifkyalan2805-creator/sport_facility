@@ -123,3 +123,20 @@ export async function apiDelete<T = void>(
   const res = await api.delete(url, config);
   return res.data?.data as T;
 }
+
+/**
+ * Upload multipart (FormData). Pakai fetch, bukan instance axios, karena default
+ * header `Content-Type: application/json` akan mencegah browser menyetel boundary
+ * multipart. fetch dengan FormData menyetel boundary otomatis.
+ */
+export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
+  const token = tokenStore.access;
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.message || "Upload gagal");
+  return json.data as T;
+}

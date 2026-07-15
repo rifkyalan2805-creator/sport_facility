@@ -48,7 +48,7 @@ function PlanCard({ plan }: { plan: MembershipPlan }) {
         ))}
       </ul>
       <Link
-        href="/register"
+        href="/membership/daftar"
         className={`mt-6 cursor-pointer rounded-full px-5 py-3 text-center text-sm font-semibold transition-colors duration-200 ${
           popular
             ? "bg-white text-ink-900 hover:bg-white/90"

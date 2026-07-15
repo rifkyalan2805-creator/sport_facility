@@ -12,11 +12,6 @@ interface PoolCheckoutResp {
   discount: { percent: number; amount: number; totalQty: number };
 }
 
-interface SubscribeResp {
-  membership: { id: string };
-  payment: { id: string };
-}
-
 /**
  * Runner mode TIKET (satuan/group): `POST /pool/checkout` (reservasi tiket +
  * diskon grup server-side + 1 payment) → settle. Diskon dihitung server.
@@ -44,23 +39,6 @@ export function makePoolTicketRunner(opts: {
       // Refresh apa pun hasilnya: 422 kuota penuh atau gagal (onFailed) → kuota berubah.
       opts.qc.invalidateQueries({ queryKey: ["pool-sessions"] });
       opts.qc.invalidateQueries({ queryKey: ["my-pool-tickets"] });
-    }
-  };
-}
-
-/** Runner mode MEMBERSHIP: `POST /membership/subscribe` → settle. */
-export function makeMembershipRunner(opts: { planId: string; qc: QueryClient }): CheckoutRunner {
-  return async (outcome) => {
-    try {
-      const res = await apiPost<SubscribeResp>(
-        "/membership/subscribe",
-        { plan_id: opts.planId },
-        { headers: { "Idempotency-Key": newKey() } },
-      );
-      const settled = await settlePayment(res.payment.id, outcome);
-      return { ...settled, confirmedCount: 1 };
-    } finally {
-      opts.qc.invalidateQueries({ queryKey: ["my-memberships"] });
     }
   };
 }
