@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { reportService, ReportService } from '../services/report.service';
 import { catchAsync } from '../utils/catchAsync';
 import { HttpStatus } from '../utils/httpStatus';
-import { OccupancyQuery, RecordOccupancyBody } from '../validators/report.validator';
+import { OccupancyQuery, RecordOccupancyBody, RevenueQuery } from '../validators/report.validator';
 
 export class ReportController {
   constructor(private readonly service: ReportService = reportService) {}
@@ -27,6 +27,12 @@ export class ReportController {
 
   getSummary = catchAsync(async (_req: Request, res: Response) => {
     res.status(HttpStatus.OK).json({ success: true, data: await this.service.getSummary() });
+  });
+
+  getRevenue = catchAsync(async (req: Request, res: Response) => {
+    const q = req.query as unknown as RevenueQuery;
+    const data = await this.service.getRevenueBreakdown(q.range);
+    res.status(HttpStatus.OK).json({ success: true, data });
   });
 }
 

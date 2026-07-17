@@ -312,6 +312,35 @@ export function useAdminSummary() {
   });
 }
 
+// ---- Admin: breakdown revenue (combo tren + donut komposisi) ----
+export type RevenueRange = "7d" | "30d";
+
+export interface RevenueTrendPoint {
+  date: string; // YYYY-MM-DD
+  revenue: number;
+  count: number;
+}
+
+export interface RevenueCompositionSlice {
+  label: string; // Padel, Tennis, Kolam, Membership, Event, ... , Lainnya
+  amount: number;
+  pct: number; // 0..100, 1 desimal
+}
+
+export interface RevenueBreakdown {
+  range: RevenueRange;
+  trend: RevenueTrendPoint[];
+  composition: RevenueCompositionSlice[];
+  total: number; // Σ composition.amount === total === Σ trend.revenue
+}
+
+export function useRevenueBreakdown(range: RevenueRange = "7d") {
+  return useQuery({
+    queryKey: ["admin-revenue", range],
+    queryFn: () => apiGet<RevenueBreakdown>(`/reports/revenue?range=${range}`),
+  });
+}
+
 // ---- Admin: transaksi (semua booking & payment) ----
 export interface AdminBooking {
   id: string;

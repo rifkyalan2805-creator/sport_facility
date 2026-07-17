@@ -16,5 +16,10 @@ export const occupancyQuerySchema = z.object({
   date: dateStr,
 });
 
+export const revenueQuerySchema = z.object({
+  range: z.enum(['7d', '30d']).default('7d'),
+});
+
 export type RecordOccupancyBody = z.infer<typeof recordOccupancySchema>;
 export type OccupancyQuery = z.infer<typeof occupancyQuerySchema>;
+export type RevenueQuery = z.infer<typeof revenueQuerySchema>;

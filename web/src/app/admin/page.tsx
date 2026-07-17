@@ -1,12 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useAdminSummary } from "@/lib/queries";
+import { useAdminSummary, useRevenueBreakdown, type RevenueRange } from "@/lib/queries";
 import { formatRupiah } from "@/lib/format";
 
 // Recharts akses DOM → hindari SSR.
-const RevenueChart = dynamic(() => import("@/components/admin/RevenueChart"), { ssr: false });
+const RevenueTrendChart = dynamic(() => import("@/components/admin/RevenueTrendChart"), {
+  ssr: false,
+});
+const RevenueCompositionChart = dynamic(
+  () => import("@/components/admin/RevenueCompositionChart"),
+  { ssr: false }
+);
 
 function Stat({
   label,
@@ -37,8 +44,43 @@ function Stat({
   );
 }
 
+const RANGES: { key: RevenueRange; label: string }[] = [
+  { key: "7d", label: "7 Hari" },
+  { key: "30d", label: "30 Hari" },
+];
+
+function PeriodToggle({
+  range,
+  onChange,
+}: {
+  range: RevenueRange;
+  onChange: (r: RevenueRange) => void;
+}) {
+  return (
+    <div className="inline-flex rounded-xl border border-ink-900/10 bg-ink-900/[0.03] p-1">
+      {RANGES.map((o) => (
+        <button
+          key={o.key}
+          type="button"
+          onClick={() => onChange(o.key)}
+          aria-pressed={range === o.key}
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+            range === o.key
+              ? "bg-white text-ink-900 shadow-sm"
+              : "text-ink-400 hover:text-ink-700"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function AdminOverview() {
+  const [range, setRange] = useState<RevenueRange>("7d");
   const { data: s, isLoading, isError } = useAdminSummary();
+  const { data: rev, isLoading: revLoading } = useRevenueBreakdown(range);
   const v = (n?: number) => (isLoading ? "…" : String(n ?? 0));
 
   return (
@@ -67,19 +109,44 @@ export default function AdminOverview() {
         <Stat label="Total booking" value={v(s?.totalBookings)} href="/admin/transaksi" />
       </div>
 
-      <section className="mt-10 rounded-2xl border border-ink-900/10 bg-white p-6">
+      <div className="mt-10">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ink-900">Revenue 7 Hari Terakhir</h2>
-          <span className="text-sm text-ink-400">dari pembayaran lunas</span>
+          <h2 className="text-lg font-semibold text-ink-900">Analisis Revenue</h2>
+          <PeriodToggle range={range} onChange={setRange} />
         </div>
-        <div className="mt-4">
-          {isLoading || !s ? (
-            <div className="h-72 animate-pulse rounded-xl bg-ink-900/5" />
-          ) : (
-            <RevenueChart data={s.revenue7d} />
-          )}
+
+        <div className="mt-4 grid gap-6 lg:grid-cols-3">
+          <section className="rounded-2xl border border-ink-900/10 bg-white p-6 lg:col-span-2">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-ink-900">Tren revenue</h3>
+              <span className="text-sm text-ink-400">
+                {range === "7d" ? "7 hari" : "30 hari"} terakhir · pembayaran lunas
+              </span>
+            </div>
+            <div className="mt-4">
+              {revLoading || !rev ? (
+                <div className="h-72 animate-pulse rounded-xl bg-ink-900/5" />
+              ) : (
+                <RevenueTrendChart data={rev.trend} />
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-ink-900/10 bg-white p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-ink-900">Uang dari mana</h3>
+              <span className="text-sm text-ink-400">komposisi</span>
+            </div>
+            <div className="mt-4">
+              {revLoading || !rev ? (
+                <div className="h-64 animate-pulse rounded-xl bg-ink-900/5" />
+              ) : (
+                <RevenueCompositionChart data={rev.composition} total={rev.total} />
+              )}
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

@@ -7,6 +7,19 @@ export function formatRupiah(value: string | number): string {
   }).format(Number.isFinite(n) ? n : 0);
 }
 
+/** Angka rupiah ringkas untuk label sumbu chart: 1_500_000 → "1.5jt", 2e9 → "2M". */
+export function shortRupiah(v: number): string {
+  if (v >= 1_000_000_000) return `${Math.round((v / 1_000_000_000) * 10) / 10}M`;
+  if (v >= 1_000_000) return `${Math.round((v / 1_000_000) * 10) / 10}jt`;
+  if (v >= 1_000) return `${Math.round(v / 1000)}rb`;
+  return `${v}`;
+}
+
+/** "YYYY-MM-DD" → "DD/MM" untuk tick sumbu-X chart. */
+export function shortDayMonth(d: string): string {
+  return `${d.slice(8, 10)}/${d.slice(5, 7)}`;
+}
+
 /** Kolom TIME (ISO "1970-01-01THH:mm:...Z") → "HH:mm". */
 export function formatTimeISO(iso: string): string {
   return iso.slice(11, 16);

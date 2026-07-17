@@ -2,7 +2,11 @@ import { Router } from 'express';
 import { reportController } from '../controllers/report.controller';
 import { requireAuth, requireRole } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { occupancyQuerySchema, recordOccupancySchema } from '../validators/report.validator';
+import {
+  occupancyQuerySchema,
+  recordOccupancySchema,
+  revenueQuerySchema,
+} from '../validators/report.validator';
 
 const router = Router();
 const adminOnly = [requireAuth, requireRole('admin', 'superadmin')];
@@ -35,7 +39,19 @@ router.use(...adminOnly);
  *     security: [{ bearerAuth: [] }]
  *     responses: { 200: { description: OK } }
  */
+/**
+ * @openapi
+ * /api/v1/reports/revenue:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Breakdown revenue admin — tren (combo) + komposisi (donut)
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - { in: query, name: range, schema: { type: string, enum: [7d, 30d], default: 7d } }
+ *     responses: { 200: { description: OK } }
+ */
 router.get('/summary', reportController.getSummary);
+router.get('/revenue', validate(revenueQuerySchema, 'query'), reportController.getRevenue);
 router.get('/occupancy', validate(occupancyQuerySchema, 'query'), reportController.getOccupancy);
 router.post('/occupancy', validate(recordOccupancySchema, 'body'), reportController.recordOccupancy);
 
