@@ -6,6 +6,7 @@ import routes from './routes';
 import { env } from './config/env';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
+import { globalLimiter } from './middlewares/rateLimit';
 import { UPLOADS_ROOT, ensureUploadDirs } from './config/upload';
 
 /** Pecah CORS_ORIGINS (dipisah koma) menjadi array origin yang bersih. */
@@ -44,6 +45,10 @@ const buildCorsOptions = (): CorsOptions => {
 export const createApp = () => {
   const app = express();
 
+  // Di belakang reverse proxy (production): percayai 1 hop agar req.ip = IP asli
+  // klien — dipakai rate limiter & disimpan sebagai ip_address di session.
+  if (env.NODE_ENV === 'production') app.set('trust proxy', 1);
+
   app.use(helmet());
   app.use(cors(buildCorsOptions()));
   app.use(express.json());
@@ -62,7 +67,8 @@ export const createApp = () => {
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.get('/api/docs.json', (_req, res) => res.json(swaggerSpec));
 
-  app.use('/api/v1', routes);
+  // Rate limit global hanya untuk API (statis /uploads & /api/docs tidak dibatasi).
+  app.use('/api/v1', globalLimiter, routes);
 
   // 404 + error handler global selalu terakhir.
   app.use(notFoundHandler);

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { requireAuth } from '../middlewares/auth';
+import { authLimiter } from '../middlewares/rateLimit';
 import { validate } from '../middlewares/validate';
 import {
   loginSchema,
@@ -32,7 +33,7 @@ const router = Router();
  *       201: { description: User dibuat + token }
  *       409: { description: Email/phone sudah terdaftar }
  */
-router.post('/register', validate(registerSchema, 'body'), authController.register);
+router.post('/register', authLimiter, validate(registerSchema, 'body'), authController.register);
 
 /**
  * @openapi
@@ -54,7 +55,7 @@ router.post('/register', validate(registerSchema, 'body'), authController.regist
  *       200: { description: Berhasil login }
  *       401: { description: Kredensial salah }
  */
-router.post('/login', validate(loginSchema, 'body'), authController.login);
+router.post('/login', authLimiter, validate(loginSchema, 'body'), authController.login);
 
 /**
  * @openapi
@@ -74,7 +75,7 @@ router.post('/login', validate(loginSchema, 'body'), authController.login);
  *       200: { description: Token baru }
  *       401: { description: Refresh token tidak valid/kedaluwarsa }
  */
-router.post('/refresh', validate(refreshSchema, 'body'), authController.refresh);
+router.post('/refresh', authLimiter, validate(refreshSchema, 'body'), authController.refresh);
 
 /**
  * @openapi
