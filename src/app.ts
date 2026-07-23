@@ -1,17 +1,51 @@
 import express from 'express';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import routes from './routes';
+import { env } from './config/env';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 import { UPLOADS_ROOT, ensureUploadDirs } from './config/upload';
+
+/** Pecah CORS_ORIGINS (dipisah koma) menjadi array origin yang bersih. */
+const parseOrigins = (raw?: string): string[] =>
+  (raw ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+/**
+ * Whitelist CORS. Origin yang tidak terdaftar tidak mendapat header CORS
+ * (browser memblokir), tanpa melempar 500. Request tanpa header Origin
+ * (same-origin, curl, server-to-server, health check) selalu diizinkan.
+ */
+const buildCorsOptions = (): CorsOptions => {
+  let allowlist = parseOrigins(env.CORS_ORIGINS);
+  if (allowlist.length === 0) {
+    if (env.NODE_ENV === 'production') {
+      console.warn(
+        '[CORS] CORS_ORIGINS kosong di production — semua request lintas-origin akan ditolak. Set CORS_ORIGINS.'
+      );
+    } else {
+      allowlist = ['http://localhost:3001']; // fallback DX untuk dev/test
+    }
+  }
+
+  return {
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);
+      return cb(null, allowlist.includes(origin));
+    },
+    credentials: true,
+  };
+};
 
 export const createApp = () => {
   const app = express();
 
   app.use(helmet());
-  app.use(cors());
+  app.use(cors(buildCorsOptions()));
   app.use(express.json());
 
   // File upload (disk) — folder dibuat saat boot & disajikan statis.
