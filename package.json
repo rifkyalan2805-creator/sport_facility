@@ -26,7 +26,7 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.2.0",
-    "nanoid": "^3.3.7",
+    "nanoid": "^3.3.16",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "zod": "^3.23.8"
@@ -48,5 +48,13 @@
     "ts-jest": "^29.2.5",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.6.3"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.8",
+    "fast-uri": "3.1.4",
+    "body-parser": "1.20.6",
+    "@apidevtools/json-schema-ref-parser": {
+      "js-yaml": "4.3.0"
+    }
   }
 }
