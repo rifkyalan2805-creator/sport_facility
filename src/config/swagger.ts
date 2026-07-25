@@ -1,6 +1,13 @@
 import path from 'path';
 import swaggerJsdoc from 'swagger-jsdoc';
 
+// glob memakai '/' sebagai separator di semua OS. path.join menghasilkan '\' di
+// Windows yang ditafsirkan glob sebagai karakter escape → 0 file ter-scan
+// (Swagger UI tampil tanpa endpoint). Normalisasi separator ke '/' agar pola
+// glob konsisten di Windows maupun Linux.
+const globPath = (rel: string): string =>
+  path.join(process.cwd(), rel).split(path.sep).join('/');
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.3',
@@ -77,10 +84,7 @@ const options: swaggerJsdoc.Options = {
     security: [{ bearerAuth: [] }],
   },
   // Pindai anotasi @openapi di file route (mendukung dev .ts maupun build .js).
-  apis: [
-    path.join(process.cwd(), 'src/routes/*.ts'),
-    path.join(process.cwd(), 'dist/routes/*.js'),
-  ],
+  apis: [globPath('src/routes/*.ts'), globPath('dist/routes/*.js')],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
