@@ -7,6 +7,7 @@ import {
   loginSchema,
   refreshSchema,
   registerSchema,
+  updateMeSchema,
 } from '../validators/auth.validator';
 
 const router = Router();
@@ -23,11 +24,12 @@ const router = Router();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email, phone, full_name, password]
+ *             required: [email, phone, full_name, nickname, password]
  *             properties:
  *               email: { type: string, format: email }
  *               phone: { type: string }
  *               full_name: { type: string }
+ *               nickname: { type: string, minLength: 2, maxLength: 60, description: Nama panggilan }
  *               password: { type: string, minLength: 8 }
  *     responses:
  *       201: { description: User dibuat + token }
@@ -108,5 +110,36 @@ router.post('/logout', validate(refreshSchema, 'body'), authController.logout);
  *       401: { description: Tidak terautentikasi }
  */
 router.get('/me', requireAuth, authController.me);
+
+/**
+ * @openapi
+ * /api/v1/auth/me:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Ubah profil sendiri
+ *     description: >
+ *       Kirim hanya field yang berubah; minimal satu. Email dan password
+ *       TIDAK bisa diubah lewat endpoint ini. `photo_url` harus URL hasil
+ *       POST /api/v1/uploads/avatar (atau null untuk menghapus foto).
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             minProperties: 1
+ *             properties:
+ *               full_name: { type: string, minLength: 2, maxLength: 150 }
+ *               nickname: { type: string, minLength: 2, maxLength: 60 }
+ *               phone: { type: string }
+ *               photo_url: { type: string, nullable: true }
+ *     responses:
+ *       200: { description: Profil terbaru }
+ *       400: { description: Validasi gagal / tidak ada field yang dikenal dikirim }
+ *       401: { description: Tidak terautentikasi }
+ *       409: { description: Nomor telepon sudah dipakai akun lain }
+ */
+router.patch('/me', requireAuth, validate(updateMeSchema, 'body'), authController.updateMe);
 
 export default router;

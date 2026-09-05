@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import Stepper from "@/components/booking/Stepper";
 import CheckoutPanel from "@/components/booking/CheckoutPanel";
-import PhotoUpload from "@/components/membership/PhotoUpload";
+import PhotoUpload from "@/components/PhotoUpload";
 import MemberCard from "@/components/membership/MemberCard";
 import { useAuth } from "@/lib/auth-context";
 import { useMembershipPlans, useMyMemberships, type MembershipPlan } from "@/lib/queries";
@@ -154,10 +154,10 @@ export default function MembershipWizard() {
       <header className="max-w-2xl">
         <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">
           <span className="h-1.5 w-1.5 rounded-full bg-neon-pink" />
-          Membership
+          Membership Kolam
         </span>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight text-ink-900 sm:text-5xl">
-          Daftar <span className="text-gradient-neon">Membership</span>
+          Daftar <span className="text-gradient-neon">Membership Kolam</span>
         </h1>
       </header>
 
@@ -433,9 +433,9 @@ export default function MembershipWizard() {
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-2xl text-green-600">
             ✓
           </div>
-          <h2 className="mt-4 text-2xl font-semibold text-ink-900">Membership Aktif!</h2>
+          <h2 className="mt-4 text-2xl font-semibold text-ink-900">Membership Kolam Aktif!</h2>
           <p className="mt-1 text-sm text-ink-500">
-            Kartu member kamu siap. Tunjukkan saat masuk fasilitas.
+            Kartu member kamu siap. Tunjukkan saat masuk area kolam.
           </p>
           <div className="mt-8">
             <MemberCard
@@ -461,7 +461,7 @@ export default function MembershipWizard() {
         <CheckoutPanel
           open
           variant="modal"
-          subtitle={`Membership · ${plan.name}`}
+          subtitle={`Membership Kolam · ${plan.name}`}
           lines={[{ label: `${plan.name} · ${plan.duration_days} hari`, amount: Number(plan.price) }]}
           subtotal={Number(plan.price)}
           total={Number(plan.price)}

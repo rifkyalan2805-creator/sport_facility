@@ -13,6 +13,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------- ENUMS (dari schema SQL) ----------
@@ -68,6 +69,13 @@ model users {
   email             String            @unique @db.VarChar(255)
   phone             String            @unique @db.VarChar(20)
   full_name         String            @db.VarChar(150)
+  /// Nama panggilan — dipakai sbg keterangan subject di tabel admin.
+  /// Nullable krn akun lama (lihat db/add_user_nickname.sql); registrasi baru wajib.
+  nickname          String?           @db.VarChar(60)
+  /// Foto profil akun — URL publik Supabase Storage (bucket avatar).
+  /// Nullable & opsional; UI jatuh ke inisial nama bila kosong.
+  /// Berbeda dari user_memberships.photo_url yang di-snapshot per member card.
+  photo_url         String?
   password_hash     String
   role              user_role         @default(member)
   is_active         Boolean           @default(true)

@@ -1,11 +1,18 @@
-import { users } from '@prisma/client';
+import { Prisma, users } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { env } from '../config/env';
 import { AppError } from '../utils/AppError';
 import { hashPassword, verifyPassword } from '../utils/password';
 import { signAccessToken } from '../utils/jwt';
 import { generateRefreshToken, hashToken } from '../utils/token';
-import { AuthResult, AuthTokens, LoginInput, RegisterInput, SafeUser } from '../types/auth.types';
+import {
+  AuthResult,
+  AuthTokens,
+  LoginInput,
+  RegisterInput,
+  SafeUser,
+  UpdateProfileInput,
+} from '../types/auth.types';
 import { UserRepository, userRepository } from '../repositories/user.repository';
 import { SessionRepository, sessionRepository } from '../repositories/session.repository';
 import { DbClient } from '../config/prisma';
@@ -29,6 +36,7 @@ export class AuthService {
       email: input.email,
       phone: input.phone,
       full_name: input.fullName,
+      nickname: input.nickname,
       password_hash,
     });
 
@@ -80,6 +88,42 @@ export class AuthService {
     return toSafeUser(user);
   }
 
+  /**
+   * Ubah profil sendiri. Hanya field yang dikirim yang disentuh, jadi
+   * mengirim { nickname } tidak mengosongkan yang lain.
+   */
+  async updateMe(userId: string, input: UpdateProfileInput): Promise<SafeUser> {
+    const current = await this.users.findById(userId);
+    if (!current) throw AppError.notFound('User tidak ditemukan');
+
+    // Cek duplikat nomor hanya bila benar-benar berganti — kalau tidak, user
+    // yang menyimpan form tanpa mengubah telepon akan bentrok dgn dirinya sendiri.
+    if (input.phone !== undefined && input.phone !== current.phone) {
+      const taken = await this.users.findByPhone(input.phone);
+      if (taken) throw AppError.conflict('Nomor telepon sudah terdaftar');
+    }
+
+    const data: Prisma.usersUncheckedUpdateInput = {
+      // Kolom users.updated_at tidak memakai @updatedAt, jadi diisi manual.
+      updated_at: new Date(),
+    };
+    if (input.fullName !== undefined) data.full_name = input.fullName;
+    if (input.nickname !== undefined) data.nickname = input.nickname;
+    if (input.phone !== undefined) data.phone = input.phone;
+    if (input.photoUrl !== undefined) data.photo_url = input.photoUrl;
+
+    try {
+      return toSafeUser(await this.users.update(userId, data));
+    } catch (err) {
+      // Pengaman balapan: dua request menyimpan nomor sama secara bersamaan
+      // lolos pengecekan di atas, unique constraint DB yang menangkapnya.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw AppError.conflict('Nomor telepon sudah terdaftar');
+      }
+      throw err;
+    }
+  }
+
   // ---- helpers ----
 
   private async issueTokens(
@@ -115,6 +159,8 @@ export function toSafeUser(user: users): SafeUser {
     email: user.email,
     phone: user.phone,
     full_name: user.full_name,
+    nickname: user.nickname,
+    photo_url: user.photo_url,
     role: user.role,
     is_active: user.is_active,
     email_verified: user.email_verified,

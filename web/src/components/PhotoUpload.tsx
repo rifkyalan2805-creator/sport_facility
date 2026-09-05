@@ -6,9 +6,15 @@ import { assetUrl } from "@/lib/asset";
 import { getErrorMessage } from "@/lib/error";
 
 interface PhotoUploadProps {
-  value?: string | null; // photo_url tersimpan (/uploads/...)
+  value?: string | null; // photo_url tersimpan (URL Supabase, atau "/uploads/..." utk data lama)
   onChange: (url: string) => void;
   invalid?: boolean;
+  /** Endpoint unggah — menentukan bucket tujuan di Supabase Storage. */
+  endpoint?: string;
+  /** Tampilkan pratinjau bulat (foto profil) alih-alih kotak (member card). */
+  round?: boolean;
+  alt?: string;
+  hint?: string;
 }
 
 /** Muat gambar dari File → HTMLImageElement. */
@@ -50,7 +56,21 @@ async function downscale(file: File, max = 600, quality = 0.8): Promise<Blob> {
   );
 }
 
-export default function PhotoUpload({ value, onChange, invalid }: PhotoUploadProps) {
+/**
+ * Pemilih + pengunggah foto. Gambar diperkecil di browser sebelum dikirim
+ * (hemat kuota & selalu di bawah batas 2 MB backend), lalu diunggah ke
+ * Supabase Storage. Yang dikembalikan ke `onChange` adalah URL publik absolut
+ * — penyimpanannya ke database jadi tanggung jawab pemanggil.
+ */
+export default function PhotoUpload({
+  value,
+  onChange,
+  invalid,
+  endpoint = "/uploads/member-photo",
+  round = false,
+  alt = "Foto member",
+  hint = "JPG/PNG/WebP, akan diperkecil otomatis.",
+}: PhotoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -65,8 +85,8 @@ export default function PhotoUpload({ value, onChange, invalid }: PhotoUploadPro
     try {
       const blob = await downscale(file);
       const form = new FormData();
-      form.append("photo", blob, "member.jpg");
-      const { url } = await apiUpload<{ url: string }>("/uploads/member-photo", form);
+      form.append("photo", blob, "photo.jpg");
+      const { url } = await apiUpload<{ url: string }>(endpoint, form);
       onChange(url);
     } catch (err) {
       setError(getErrorMessage(err, "Gagal mengunggah foto"));
@@ -79,13 +99,13 @@ export default function PhotoUpload({ value, onChange, invalid }: PhotoUploadPro
     <div>
       <div className="flex items-center gap-4">
         <div
-          className={`flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border ${
-            invalid ? "border-red-400" : "border-ink-900/15"
-          } bg-ink-900/5`}
+          className={`flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden border ${
+            round ? "rounded-full" : "rounded-2xl"
+          } ${invalid ? "border-red-400" : "border-ink-900/15"} bg-ink-900/5`}
         >
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="Foto member" className="h-full w-full object-cover" />
+            <img src={preview} alt={alt} className="h-full w-full object-cover" />
           ) : (
             <span className="text-xs text-ink-400">Foto</span>
           )}
@@ -99,7 +119,7 @@ export default function PhotoUpload({ value, onChange, invalid }: PhotoUploadPro
           >
             {busy ? "Mengunggah…" : preview ? "Ganti foto" : "Unggah foto"}
           </button>
-          <p className="mt-1.5 text-xs text-ink-400">JPG/PNG/WebP, akan diperkecil otomatis.</p>
+          <p className="mt-1.5 text-xs text-ink-400">{hint}</p>
           <input
             ref={inputRef}
             type="file"

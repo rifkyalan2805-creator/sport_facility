@@ -17,6 +17,10 @@ export class UserRepository {
   create(data: Prisma.usersUncheckedCreateInput, db: DbClient = prisma) {
     return db.users.create({ data });
   }
+
+  update(id: string, data: Prisma.usersUncheckedUpdateInput, db: DbClient = prisma) {
+    return db.users.update({ where: { id }, data });
+  }
 }
 
 export const userRepository = new UserRepository();

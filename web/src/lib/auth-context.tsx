@@ -14,6 +14,10 @@ export interface AuthUser {
   email: string;
   phone: string;
   full_name: string;
+  /** Nama panggilan; null utk akun lama yg mendaftar sebelum kolom ini ada. */
+  nickname: string | null;
+  /** Foto profil: URL Supabase, atau path legacy "/uploads/..." — pakai assetUrl(). */
+  photo_url: string | null;
   role: string;
   email_verified: boolean;
 }
@@ -22,6 +26,7 @@ interface RegisterInput {
   email: string;
   phone: string;
   full_name: string;
+  nickname: string;
   password: string;
 }
 
@@ -37,6 +42,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<AuthUser>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
+  /** Tulis ulang user di context — dipakai setelah PATCH /auth/me. */
+  setUser: (user: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -83,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import PageNav from "@/components/PageNav";
+import { LogoEmblem } from "@/components/brand/Logo";
 import { useAuth } from "@/lib/auth-context";
 import { getErrorMessage } from "@/lib/error";
 
@@ -18,6 +19,7 @@ function RegisterForm() {
 
   const [form, setForm] = useState({
     full_name: "",
+    nickname: "",
     email: "",
     phone: "",
     password: "",
@@ -51,9 +53,11 @@ function RegisterForm() {
     <main className="relative grid min-h-screen place-items-center bg-white px-6 py-12">
       <PageNav variant="cta" className="absolute left-6 top-6" />
       <form onSubmit={onSubmit} className="w-full max-w-sm">
-        <Link href="/" className="mb-8 flex items-center gap-2">
-          <span className="h-5 w-5 rounded-md bg-gradient-to-br from-neon-pink via-neon-purple to-neon-blue" />
-          <span className="text-base font-semibold tracking-tight">SportHub</span>
+        <Link href="/" className="mb-8 flex items-center gap-2.5">
+          <LogoEmblem className="h-9 w-9" />
+          <span className="text-base font-semibold tracking-tight">
+            ISTANA DIENG CLUB HOUSE
+          </span>
         </Link>
         <h1 className="text-3xl font-semibold tracking-tight">Daftar</h1>
         <p className="mt-2 text-sm text-ink-400">Gabung ke komunitas kami.</p>
@@ -69,6 +73,22 @@ function RegisterForm() {
             className={inputCls}
             placeholder="Nama lengkap"
           />
+        </label>
+        <label className="mt-4 block text-sm font-medium">
+          Nama Panggilan
+          <input
+            required
+            minLength={2}
+            maxLength={60}
+            autoComplete="nickname"
+            value={form.nickname}
+            onChange={set("nickname")}
+            className={inputCls}
+            placeholder="Nama sapaan Anda"
+          />
+          <span className="mt-1 block text-xs font-normal text-ink-400">
+            Dipakai staf untuk menyapa &amp; mengenali Anda di meja depan.
+          </span>
         </label>
         <label className="mt-4 block text-sm font-medium">
           Email

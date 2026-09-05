@@ -2,7 +2,12 @@ import { Request, Response } from 'express';
 import { authService, AuthService } from '../services/auth.service';
 import { catchAsync } from '../utils/catchAsync';
 import { HttpStatus } from '../utils/httpStatus';
-import { LoginBody, RefreshBody, RegisterBody } from '../validators/auth.validator';
+import {
+  LoginBody,
+  RefreshBody,
+  RegisterBody,
+  UpdateMeBody,
+} from '../validators/auth.validator';
 
 export class AuthController {
   constructor(private readonly service: AuthService = authService) {}
@@ -13,6 +18,7 @@ export class AuthController {
       email: body.email,
       phone: body.phone,
       fullName: body.full_name,
+      nickname: body.nickname,
       password: body.password,
       ip: req.ip,
       userAgent: req.header('user-agent') ?? undefined,
@@ -49,6 +55,17 @@ export class AuthController {
 
   me = catchAsync(async (req: Request, res: Response) => {
     const user = await this.service.me(req.userId!);
+    res.status(HttpStatus.OK).json({ success: true, data: user });
+  });
+
+  updateMe = catchAsync(async (req: Request, res: Response) => {
+    const body = req.body as UpdateMeBody;
+    const user = await this.service.updateMe(req.userId!, {
+      fullName: body.full_name,
+      nickname: body.nickname,
+      phone: body.phone,
+      photoUrl: body.photo_url,
+    });
     res.status(HttpStatus.OK).json({ success: true, data: user });
   });
 }
