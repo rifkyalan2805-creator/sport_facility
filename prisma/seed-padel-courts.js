@@ -40,6 +40,9 @@ async function main() {
     });
 
     // 7 jadwal (0=Minggu .. 6=Sabtu), 06:00–23:00.
+    // const watch => {time. court?}
+    //  time: {day:0, 1,2,3,4,5,6}
+    // update: {open_time: OPEN, close_time: CLOSE, is_holiday_closed: false}
     for (let d = 0; d < 7; d++) {
       await prisma.court_schedules.upsert({
         where: { court_id_day_of_week: { court_id: court.id, day_of_week: d } },

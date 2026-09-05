@@ -8,19 +8,19 @@ import { timeToDate } from '../src/utils/time';
 const FUTURE_DATE = '2999-01-04'; // jauh di masa depan → tak ada slot "lampau"
 
 const mockCourts = () =>
-  ({
-    findActiveById: jest.fn(),
-    findScheduleForDay: jest.fn(),
-  } as unknown as jest.Mocked<CourtRepository>);
+({
+  findActiveById: jest.fn(),
+  findScheduleForDay: jest.fn(),
+} as unknown as jest.Mocked<CourtRepository>);
 
 const mockBookings = () =>
   ({ findActiveByCourtDate: jest.fn().mockResolvedValue([]) } as unknown as jest.Mocked<BookingRepository>);
 
 const mockPricing = () =>
-  ({
-    listPadel: jest.fn().mockResolvedValue([]),
-    listTennis: jest.fn().mockResolvedValue([]),
-  } as unknown as jest.Mocked<PricingRepository>);
+({
+  listPadel: jest.fn().mockResolvedValue([]),
+  listTennis: jest.fn().mockResolvedValue([]),
+} as unknown as jest.Mocked<PricingRepository>);
 
 function buildService() {
   const courts = mockCourts();

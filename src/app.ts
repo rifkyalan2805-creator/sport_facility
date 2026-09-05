@@ -53,7 +53,8 @@ export const createApp = () => {
   app.use(cors(buildCorsOptions()));
   app.use(express.json());
 
-  // File upload (disk) — folder dibuat saat boot & disajikan statis.
+  // LEGACY — foto member sebelum migrasi ke Supabase Storage masih dilayani dari
+  // disk agar member card lama tidak rusak. Upload baru langsung ke bucket.
   // CORP cross-origin agar <img> dari frontend (port beda) tidak diblokir helmet.
   ensureUploadDirs();
   app.use(
