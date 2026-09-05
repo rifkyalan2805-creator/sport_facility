@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import PadelBooking from "@/components/booking/PadelBooking";
 
 export const metadata: Metadata = {
-  title: "Booking Lapangan Padel — SportHub",
+  title: "Reservasi Lapangan Padel — ISTANA DIENG CLUB HOUSE",
   description: "Pilih lapangan padel, tanggal, dan slot waktu. Harga off-peak lebih hemat.",
 };
 

@@ -1,66 +1,76 @@
-"use client";
+import Button, { Eyebrow } from "@/components/brand/Button";
 
-import dynamic from "next/dynamic";
+/**
+ * Hero foto gelap full-bleed (DESIGN.md).
+ *
+ * Fotonya sengaja didesaturasi mendekati monokrom lalu digelapkan, sehingga
+ * tombol gradient menjadi SATU-SATUNYA sumber warna di viewport pertama.
+ * Teks rata kiri, bukan tengah — mengikuti karakter broadsheet.
+ *
+ * Menggantikan hero React Three Fiber sebelumnya: DESIGN.md melarang 3D render,
+ * dan homepage kini tidak lagi memuat bundle WebGL di jalur render awal.
+ */
 
-// 3D hanya di client (hindari SSR WebGL & hydration mismatch).
-const Scene = dynamic(() => import("./Scene"), { ssr: false });
+const HERO_IMAGE = "/images/sport club/Tennis/tennis 3.jpg";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen w-full overflow-hidden bg-white">
-      {/* Canvas 3D mengisi hero, menerima pointer untuk parallax */}
-      <div className="absolute inset-0">
-        <Scene />
-      </div>
+    <section className="relative isolate min-h-[92vh] w-full overflow-hidden bg-obsidian">
+      {/* Foto — grayscale penuh agar tak bersaing dengan gradient CTA */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={encodeURI(HERO_IMAGE)}
+        alt="Lapangan tenis ISTANA DIENG CLUB HOUSE"
+        // Hero adalah LCP → jangan di-lazy-load.
+        fetchPriority="high"
+        className="absolute inset-0 h-full w-full object-cover opacity-60 grayscale"
+      />
+      {/* Gelapkan sisi kiri agar teks putih tetap terbaca di atas foto apa pun */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/25" />
 
-      {/* Overlay teks — pointer-events-none agar mouse tembus ke canvas;
-          tombol diaktifkan kembali pointer-eventsnya. */}
-      <div className="pointer-events-none relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 text-center">
-        <span className="animate-fade-up mb-5 inline-flex items-center gap-2 rounded-full border border-ink-900/10 bg-white/70 px-4 py-1.5 text-xs font-medium tracking-wide text-ink-500 backdrop-blur">
-          <span className="h-1.5 w-1.5 rounded-full bg-neon-purple" />
-          Sport Facility Ecosystem
-        </span>
+      {/* Bloom ungu ambient — atmosfer, bukan isian fungsional */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(60% 55% at 0% 4%, rgba(161,98,255,0.28) 0%, rgba(161,98,255,0) 100%)",
+        }}
+      />
 
-        <h1
-          className="animate-fade-up text-balance text-5xl font-semibold leading-[1.05] tracking-tight text-ink-900 sm:text-6xl md:text-7xl"
-          style={{ animationDelay: "80ms" }}
-        >
-          More Than Sports.
-          <br />
-          <span className="text-gradient-neon">A Community.</span>
-        </h1>
+      <div className="relative mx-auto flex min-h-[92vh] max-w-[1200px] flex-col justify-center px-6 py-32">
+        <div className="max-w-3xl">
+          {/* Eyebrow netral — tombol gradient di bawah harus jadi satu-satunya
+              sumber warna di viewport pertama. */}
+          <Eyebrow tone="light">Padel · Tenis · Kolam Renang</Eyebrow>
 
-        <p
-          className="animate-fade-up mt-6 max-w-2xl text-balance text-base leading-relaxed text-ink-500 sm:text-lg"
-          style={{ animationDelay: "160ms" }}
-        >
-          Temukan tempat di mana olahraga, persahabatan, dan gaya hidup sehat
-          bertemu dalam satu ekosistem yang terus berkembang.
-        </p>
+          <h1 className="mt-5 font-display text-5xl font-black leading-none tracking-hero text-paper-white sm:text-6xl md:text-7xl lg:text-8xl">
+            Tempat bermain
+            <br />
+            yang dirawat
+            <br />
+            sungguh-sungguh.
+          </h1>
 
-        <div
-          className="animate-fade-up pointer-events-auto mt-9 flex flex-col items-center gap-3 sm:flex-row"
-          style={{ animationDelay: "240ms" }}
-        >
-          <a
-            href="#"
-            className="cursor-pointer rounded-full bg-ink-900 px-7 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-ink-700"
-          >
-            Mulai Booking
-          </a>
-          <a
-            href="#"
-            className="cursor-pointer rounded-full border border-ink-900/15 bg-white/70 px-7 py-3 text-sm font-medium text-ink-700 backdrop-blur transition-colors duration-200 hover:bg-white"
-          >
-            Jelajahi Fasilitas
-          </a>
-        </div>
-      </div>
+          <p className="mt-8 max-w-xl font-display text-base leading-relaxed text-paper-white/70 sm:text-lg">
+            Lapangan berstandar kompetisi, kolam yang terjaga kualitas airnya,
+            dan satu sistem reservasi yang menunjukkan ketersediaan sebenarnya —
+            tanpa perlu menelepon lebih dulu.
+          </p>
 
-      {/* Scroll cue */}
-      <div className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2">
-        <div className="flex h-9 w-5 items-start justify-center rounded-full border border-ink-900/20 p-1.5">
-          <span className="h-2 w-1 animate-bounce rounded-full bg-ink-400" />
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <Button href="/harga" variant="gradient" size="lg">
+              Reservasi Lapangan
+            </Button>
+            <Button
+              href="#fasilitas"
+              variant="ghost"
+              size="lg"
+              className="border-paper-white/25 text-paper-white hover:border-paper-white/60 hover:bg-paper-white/5"
+            >
+              Lihat Fasilitas
+            </Button>
+          </div>
         </div>
       </div>
     </section>

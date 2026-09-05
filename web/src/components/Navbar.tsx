@@ -5,7 +5,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "@/components/brand/Logo";
 import Button from "@/components/brand/Button";
+import Avatar from "@/components/Avatar";
 import { useAuth } from "@/lib/auth-context";
+import { displayName } from "@/lib/user";
 
 /**
  * Menu utama. `/fasilitas`, `/berita`, `/tentang-kami`, dan `/kontak` sengaja
@@ -185,8 +187,17 @@ export default function Navbar({ tone = "dark" }: { tone?: "dark" | "light" }) {
                     Panel
                   </Link>
                 )}
-                <Link href="/dashboard" className={`hidden sm:inline-flex ${ghost}`}>
-                  {user.full_name.split(" ")[0]}
+                <Link
+                  href="/dashboard"
+                  className={`hidden items-center gap-2.5 sm:inline-flex ${ghost}`}
+                >
+                  <Avatar
+                    name={displayName(user)}
+                    photoUrl={user.photo_url}
+                    tone="dark"
+                    className="h-8 w-8 ring-1 ring-paper-white/25"
+                  />
+                  {displayName(user)}
                 </Link>
                 <button
                   onClick={onLogout}
@@ -278,7 +289,16 @@ export default function Navbar({ tone = "dark" }: { tone?: "dark" | "light" }) {
                         Panel
                       </Link>
                     )}
-                    <Link href="/dashboard" className={`py-2 pl-4 ${ghost}`}>
+                    <Link
+                      href="/dashboard"
+                      className={`flex items-center gap-2.5 py-2 pl-4 ${ghost}`}
+                    >
+                      <Avatar
+                        name={displayName(user)}
+                        photoUrl={user.photo_url}
+                        tone="dark"
+                        className="h-7 w-7 ring-1 ring-paper-white/25"
+                      />
                       Akun saya
                     </Link>
                   </>

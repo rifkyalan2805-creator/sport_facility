@@ -26,6 +26,24 @@ body {
     background-clip: text;
     color: transparent;
   }
+
+  /* Gradient tanda tangan DESIGN.md (mint -> cyan -> biru -> ungu) sebagai
+     isian teks. Arah selalu 90deg — sapuan horizontal membaca sbg "laju". */
+  .text-gradient-speedrun {
+    background-image: linear-gradient(
+      90deg,
+      #00c6c6 0%,
+      #00b5f4 20%,
+      #00a1ff 40%,
+      #398cff 50%,
+      #757aff 60%,
+      #906dff 75%,
+      #a162ff 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 }
 
 /* Hormati preferensi reduce-motion */

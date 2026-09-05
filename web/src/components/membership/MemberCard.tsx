@@ -1,5 +1,6 @@
 import { formatDateID } from "@/lib/format";
 import { assetUrl } from "@/lib/asset";
+import { LogoEmblem } from "@/components/brand/Logo";
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   active: { label: "Aktif", cls: "bg-green-400/20 text-green-200 ring-green-300/40" },
@@ -47,8 +48,13 @@ export default function MemberCard({
 
       <div className="relative flex items-center justify-between">
         <span className="flex items-center gap-2">
-          <span className="h-5 w-5 rounded-md bg-gradient-to-br from-neon-pink via-neon-purple to-neon-blue" />
-          <span className="text-sm font-semibold tracking-tight">SportHub</span>
+          <LogoEmblem className="h-7 w-7" />
+          <span className="text-xs font-semibold leading-tight tracking-tight">
+            ISTANA DIENG
+            <span className="block text-[9px] font-medium uppercase tracking-wider opacity-70">
+              Club House
+            </span>
+          </span>
         </span>
         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${s.cls}`}>
           {s.label}

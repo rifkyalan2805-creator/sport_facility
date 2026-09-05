@@ -70,10 +70,10 @@ export default function HargaPoolPage() {
           )}
         </section>
 
-        {/* Membership */}
+        {/* Membership Kolam */}
         <section className="mt-16">
           <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
-            Paket Membership
+            Paket Membership Kolam
           </h2>
           {plans.isLoading && <p className="mt-6 text-ink-400">Memuat paket…</p>}
           {plans.isError && (
