@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PUBLIC_URL_PREFIX } from '../services/storage.service';
 
 const uuid = z.string().uuid('Harus berupa UUID valid');
 
@@ -42,7 +43,14 @@ export const subscribeSchema = z.object({
   birth_date: dateStr,
   gender: z.enum(['laki_laki', 'perempuan', 'lainnya']),
   city: z.string().min(1).max(120),
-  photo_url: z.string().regex(/^\/uploads\//, 'photo_url harus hasil unggah (mulai dari /uploads/)'),
+  // Hanya terima URL dari endpoint unggah kami: bucket Supabase (baru) atau
+  // /uploads/ (legacy, foto sebelum migrasi). URL luar ditolak.
+  photo_url: z
+    .string()
+    .refine(
+      (v) => v.startsWith(PUBLIC_URL_PREFIX) || v.startsWith('/uploads/'),
+      'photo_url harus hasil unggah dari endpoint /uploads/member-photo'
+    ),
   medical_notes: z.string().max(2000).optional(),
   start_date: dateStr, // end_date dihitung server = start + durasi paket
   terms_accepted: z.boolean().default(false), // wajib true — ditegakkan di service (422)
@@ -52,6 +60,17 @@ export const subscribeSchema = z.object({
 export const planIdParamSchema = z.object({ id: uuid });
 export const membershipIdParamSchema = z.object({ id: uuid });
 
+/** Query daftar member kolam di panel admin (reception & manajemen). */
+export const listMembershipsQuerySchema = z.object({
+  // Kelompok warna masa berlaku; kosong = semua.
+  group: z.enum(['safe', 'warning', 'expired', 'inactive']).optional(),
+  status: z.enum(['active', 'expired', 'cancelled', 'pending']).optional(),
+  search: z.string().trim().min(1).max(120).optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+
 export type CreatePlanBody = z.infer<typeof createPlanSchema>;
 export type UpdatePlanBody = z.infer<typeof updatePlanSchema>;
 export type SubscribeBody = z.infer<typeof subscribeSchema>;
+export type ListMembershipsQuery = z.infer<typeof listMembershipsQuerySchema>;

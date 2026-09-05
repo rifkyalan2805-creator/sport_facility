@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { abonemenPackageController } from '../controllers/abonemenPackage.controller';
 import { abonemenRegistrationController } from '../controllers/abonemenRegistration.controller';
+import { userAbonemenController } from '../controllers/userAbonemen.controller';
 import { requireAuth, requireRole } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import {
@@ -9,9 +10,11 @@ import {
   registrationIdParamSchema,
   reviewRegistrationSchema,
 } from '../validators/abonemenRegistration.validator';
+import { listAbonemenQuerySchema } from '../validators/userAbonemen.validator';
 
 const router = Router();
-const adminOnly = [requireAuth, requireRole('admin', 'superadmin')];
+// Reception (staff) & superadmin boleh melihat + approve/reject registrasi abonemen.
+const staffOrAdmin = [requireAuth, requireRole('staff', 'admin', 'superadmin')];
 
 /**
  * @openapi
@@ -47,7 +50,7 @@ router.post(
 );
 router.get(
   '/registrations',
-  ...adminOnly,
+  ...staffOrAdmin,
   validate(listRegistrationQuerySchema, 'query'),
   abonemenRegistrationController.listAll
 );
@@ -65,6 +68,54 @@ router.get('/registrations/me', requireAuth, abonemenRegistrationController.list
 
 /**
  * @openapi
+ * /api/v1/abonemen/me:
+ *   get:
+ *     tags: [Abonemen]
+ *     summary: Abonemen milik user yang sedang login
+ *     description: >
+ *       Abonemen yang sudah BERJALAN (hasil approval), bukan pengajuan.
+ *       Tiap baris membawa `expiry_group` dan `total_sessions` (kuota awal
+ *       paket) agar UI tidak menghitung ulang aturannya.
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Daftar abonemen milik user }
+ *       401: { description: Tidak terautentikasi }
+ */
+router.get('/me', requireAuth, userAbonemenController.listMine);
+
+// ---- Abonemen yang sudah berjalan (hasil approval) ----
+
+/**
+ * @openapi
+ * /api/v1/abonemen/active:
+ *   get:
+ *     tags: [Abonemen]
+ *     summary: Daftar abonemen berjalan (reception & manajemen)
+ *     description: >
+ *       Berbeda dari `/registrations` yang berisi PENGAJUAN — endpoint ini
+ *       berisi abonemen yang sudah aktif di tabel user_abonemen. Tiap baris
+ *       memuat `expiry_group`: safe (hijau), warning (kuning, ≤7 hari lagi),
+ *       expired (merah), inactive (abu-abu).
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - { in: query, name: group, schema: { type: string, enum: [safe, warning, expired, inactive] } }
+ *       - { in: query, name: status, schema: { type: string, enum: [active, expired, cancelled] } }
+ *       - { in: query, name: search, schema: { type: string }, description: Nama panggilan / nama / email / paket }
+ *       - { in: query, name: page, schema: { type: integer, default: 1 } }
+ *       - { in: query, name: limit, schema: { type: integer, default: 20, maximum: 100 } }
+ *     responses:
+ *       200: { description: Daftar abonemen berjalan + meta paginasi }
+ *       403: { description: Bukan reception/admin }
+ */
+router.get(
+  '/active',
+  ...staffOrAdmin,
+  validate(listAbonemenQuerySchema, 'query'),
+  userAbonemenController.listAll
+);
+
+/**
+ * @openapi
  * /api/v1/abonemen/registrations/{id}/review:
  *   patch:
  *     tags: [Abonemen]
@@ -74,7 +125,7 @@ router.get('/registrations/me', requireAuth, abonemenRegistrationController.list
  */
 router.patch(
   '/registrations/:id/review',
-  ...adminOnly,
+  ...staffOrAdmin,
   validate(registrationIdParamSchema, 'params'),
   validate(reviewRegistrationSchema, 'body'),
   abonemenRegistrationController.review

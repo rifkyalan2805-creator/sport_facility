@@ -2,7 +2,12 @@ import { Request, Response } from 'express';
 import { membershipService, MembershipService } from '../services/membership.service';
 import { catchAsync } from '../utils/catchAsync';
 import { HttpStatus } from '../utils/httpStatus';
-import { CreatePlanBody, SubscribeBody, UpdatePlanBody } from '../validators/membership.validator';
+import {
+  CreatePlanBody,
+  ListMembershipsQuery,
+  SubscribeBody,
+  UpdatePlanBody,
+} from '../validators/membership.validator';
 
 export class MembershipController {
   constructor(private readonly service: MembershipService = membershipService) {}
@@ -61,6 +66,19 @@ export class MembershipController {
   listMine = catchAsync(async (req: Request, res: Response) => {
     const data = await this.service.listMyMemberships(req.userId!);
     res.status(HttpStatus.OK).json({ success: true, data });
+  });
+
+  /** Daftar seluruh member kolam (reception & manajemen). */
+  listAll = catchAsync(async (req: Request, res: Response) => {
+    const q = req.query as unknown as ListMembershipsQuery;
+    const result = await this.service.listAllMemberships({
+      group: q.group,
+      status: q.status,
+      search: q.search,
+      page: q.page,
+      limit: q.limit,
+    });
+    res.status(HttpStatus.OK).json({ success: true, ...result });
   });
 
   subscribe = catchAsync(async (req: Request, res: Response) => {

@@ -4,6 +4,7 @@ import { requireAuth, requireRole } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import {
   createPlanSchema,
+  listMembershipsQuerySchema,
   membershipIdParamSchema,
   planIdParamSchema,
   subscribeSchema,
@@ -12,6 +13,8 @@ import {
 
 const router = Router();
 const adminOnly = [requireAuth, requireRole('admin', 'superadmin')];
+// Daftar member kolam juga dipakai reception di meja depan.
+const receptionOrAdmin = [requireAuth, requireRole('staff', 'admin', 'superadmin')];
 
 /**
  * @openapi
@@ -75,6 +78,34 @@ router.delete(
  *     responses: { 200: { description: Daftar membership } }
  */
 router.get('/me', requireAuth, membershipController.listMine);
+
+/**
+ * @openapi
+ * /api/v1/membership/admin:
+ *   get:
+ *     tags: [Membership]
+ *     summary: Daftar member kolam (reception & manajemen)
+ *     description: >
+ *       Tiap baris memuat `expiry_group`: safe (hijau, masih lama),
+ *       warning (kuning, ≤7 hari lagi), expired (merah), inactive (abu-abu:
+ *       pending/cancelled). Filter `group` menyaring di database.
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - { in: query, name: group, schema: { type: string, enum: [safe, warning, expired, inactive] } }
+ *       - { in: query, name: status, schema: { type: string, enum: [active, expired, cancelled, pending] } }
+ *       - { in: query, name: search, schema: { type: string }, description: Nama panggilan / nama / email / no. kartu }
+ *       - { in: query, name: page, schema: { type: integer, default: 1 } }
+ *       - { in: query, name: limit, schema: { type: integer, default: 20, maximum: 100 } }
+ *     responses:
+ *       200: { description: Daftar member kolam + meta paginasi }
+ *       403: { description: Bukan reception/admin }
+ */
+router.get(
+  '/admin',
+  ...receptionOrAdmin,
+  validate(listMembershipsQuerySchema, 'query'),
+  membershipController.listAll
+);
 
 /**
  * @openapi

@@ -12,9 +12,11 @@ import {
   membershipPlanRepository,
 } from '../repositories/membershipPlan.repository';
 import {
+  ListMembershipsOptions,
   UserMembershipRepository,
   userMembershipRepository,
 } from '../repositories/userMembership.repository';
+import { expiryGroupOf } from '../utils/expiry';
 import { PaymentService, paymentService } from './payment.service';
 
 // Status membership yang masih bisa dibatalkan user.
@@ -90,6 +92,27 @@ export class MembershipService {
   // ---- User memberships ----
   listMyMemberships(userId: string) {
     return this.memberships.findManyByUser(userId);
+  }
+
+  /**
+   * Daftar member kolam untuk panel admin. Tiap baris dilengkapi
+   * `expiry_group` (safe/warning/expired/inactive) supaya badge di UI
+   * memakai perhitungan yang sama persis dengan filternya.
+   */
+  async listAllMemberships(opts: ListMembershipsOptions) {
+    const { data, total } = await this.memberships.listForAdmin(opts);
+    return {
+      data: data.map((m) => ({
+        ...m,
+        expiry_group: expiryGroupOf(m.status, m.end_date),
+      })),
+      meta: {
+        page: opts.page,
+        limit: opts.limit,
+        total,
+        totalPages: Math.ceil(total / opts.limit),
+      },
+    };
   }
 
   /**
