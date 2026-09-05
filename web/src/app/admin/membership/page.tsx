@@ -19,8 +19,8 @@ interface AdminPlan {
 }
 
 const config: ResourceConfig<AdminPlan> = {
-  title: "Paket Membership",
-  description: "Paket langganan akses fasilitas.",
+  title: "Paket Membership Kolam",
+  description: "Paket langganan akses kolam renang.",
   queryKey: "admin-plans",
   addLabel: "Paket",
   list: () => apiGet<AdminPlan[]>("/membership/plans"),
@@ -67,7 +67,9 @@ export default function AdminMembershipPage() {
   return (
     <div>
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">Admin</p>
-      <h1 className="mt-2 mb-8 text-3xl font-semibold tracking-tight text-ink-900">Membership</h1>
+      <h1 className="mt-2 mb-8 text-3xl font-semibold tracking-tight text-ink-900">
+        Membership Kolam
+      </h1>
       <AdminResource config={config} />
     </div>
   );

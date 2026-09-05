@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPatch, apiPost } from "./api";
 import type { DiscountTier } from "./groupDiscount";
+import type { AuthUser } from "./auth-context";
 
 // Tipe ringkas sesuai respons backend (bisa diperluas nanti).
 export interface MembershipPlan {
@@ -52,7 +53,7 @@ export interface Booking {
   total_price: string;
   status: "pending" | "confirmed" | "checked_in" | "completed" | "cancelled";
   booking_type: string;
-  courts?: { name: string; code: string } | null;
+  courts?: { name: string; code: string; type: string } | null;
 }
 
 export interface EventCategoryRef {
@@ -165,11 +166,28 @@ export function useAvailability(
   });
 }
 
-// Daftar booking milik user yang login (butuh token — dipakai di dashboard).
-export function useMyBookings() {
+/** Cabang olahraga sesuai enum court_type di backend. */
+export type CourtType = "paddle" | "tennis" | "badminton" | "basketball" | "futsal" | "other";
+
+export interface MyBookingFilters {
+  court_type?: CourtType;
+  booking_type?: "insidentil" | "abonemen";
+}
+
+/**
+ * Daftar booking milik user yang login (butuh token — dipakai di dashboard).
+ * Penyaringan dilakukan di backend lewat `court_type` / `booking_type`, jadi
+ * halaman Tenis & Padel tidak perlu mengunduh semuanya lalu memfilter sendiri.
+ * Filter ikut ke queryKey supaya tiap kombinasi punya cache sendiri.
+ */
+export function useMyBookings(filters: MyBookingFilters = {}) {
+  const qs = new URLSearchParams({ limit: "50" });
+  if (filters.court_type) qs.set("court_type", filters.court_type);
+  if (filters.booking_type) qs.set("booking_type", filters.booking_type);
+
   return useQuery({
-    queryKey: ["my-bookings"],
-    queryFn: () => apiGet<Booking[]>("/bookings?limit=50"),
+    queryKey: ["my-bookings", filters.court_type ?? null, filters.booking_type ?? null],
+    queryFn: () => apiGet<Booking[]>(`/bookings?${qs.toString()}`),
   });
 }
 
@@ -252,6 +270,37 @@ export function useAbonemenPackages() {
   return useQuery({
     queryKey: ["abonemen-packages"],
     queryFn: () => apiGet<AbonemenPackage[]>("/abonemen/packages"),
+  });
+}
+
+/** Kelompok masa berlaku — dihitung backend (src/utils/expiry.ts). */
+export type AbonemenExpiryGroup = "safe" | "warning" | "expired" | "inactive";
+
+/** Abonemen yang sudah BERJALAN (hasil approval), bukan pengajuan. */
+export interface MyAbonemen {
+  id: string;
+  start_date: string;
+  end_date: string;
+  remaining_sessions: number;
+  /** Kuota awal paket (sesi/minggu × minggu); null bila paket terhapus. */
+  total_sessions: number | null;
+  status: "active" | "expired" | "cancelled";
+  expiry_group: AbonemenExpiryGroup;
+  notes: string | null;
+  abonemen_packages?: {
+    id: string;
+    name: string;
+    price: string;
+    sessions_per_week: number;
+    duration_weeks: number;
+  } | null;
+}
+
+export function useMyAbonemen(enabled = true) {
+  return useQuery({
+    queryKey: ["my-abonemen"],
+    queryFn: () => apiGet<MyAbonemen[]>("/abonemen/me"),
+    enabled,
   });
 }
 
@@ -342,6 +391,16 @@ export function useRevenueBreakdown(range: RevenueRange = "7d") {
 }
 
 // ---- Admin: transaksi (semua booking & payment) ----
+
+/** Pemilik akun pada tabel admin; `nickname` = keterangan "subject". */
+export interface AdminUserRef {
+  id?: string;
+  nickname: string | null;
+  full_name: string;
+  email: string;
+  phone?: string;
+}
+
 export interface AdminBooking {
   id: string;
   booking_date: string;
@@ -350,16 +409,31 @@ export interface AdminBooking {
   total_price: string;
   status: string;
   booking_type: string;
-  courts?: { name: string; code: string } | null;
-  users?: { full_name: string; email: string } | null;
+  courts?: { name: string; code: string; type?: string } | null;
+  users?: AdminUserRef | null;
 }
 
-export function useAllBookings(filters: { status?: string; date?: string }) {
+export function useAllBookings(filters: {
+  status?: string;
+  date?: string;
+  /** Cabang olahraga: "tennis" | "paddle" | … */
+  courtType?: string;
+  /** "insidentil" | "abonemen" */
+  bookingType?: string;
+}) {
   const qs = new URLSearchParams({ scope: "all", limit: "100" });
   if (filters.status) qs.set("status", filters.status);
   if (filters.date) qs.set("booking_date", filters.date);
+  if (filters.courtType) qs.set("court_type", filters.courtType);
+  if (filters.bookingType) qs.set("booking_type", filters.bookingType);
   return useQuery({
-    queryKey: ["admin-bookings", filters.status ?? "", filters.date ?? ""],
+    queryKey: [
+      "admin-bookings",
+      filters.status ?? "",
+      filters.date ?? "",
+      filters.courtType ?? "",
+      filters.bookingType ?? "",
+    ],
     queryFn: () => apiGet<AdminBooking[]>(`/bookings?${qs.toString()}`),
   });
 }
@@ -383,6 +457,68 @@ export function useAllPayments(filters: { status?: string }) {
   return useQuery({
     queryKey: ["admin-payments", filters.status ?? ""],
     queryFn: () => apiGet<AdminPayment[]>(`/payments?${qs.toString()}`),
+  });
+}
+
+// ---- Admin: member kolam & abonemen berjalan ----
+
+/**
+ * Kelompok masa berlaku (dihitung backend, lihat src/utils/expiry.ts):
+ *   safe = hijau (masih lama) · warning = kuning (≤7 hari lagi)
+ *   expired = merah · inactive = abu-abu (pending/cancelled)
+ */
+export type ExpiryGroup = "safe" | "warning" | "expired" | "inactive";
+
+export interface AdminPoolMember {
+  id: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  auto_renew: boolean;
+  member_name: string | null;
+  card_number: string | null;
+  created_at: string;
+  expiry_group: ExpiryGroup;
+  users?: AdminUserRef | null;
+  membership_plans?: { id: string; name: string; slug: string; price: string } | null;
+}
+
+export function usePoolMembers(filters: { group?: ExpiryGroup; search?: string }) {
+  const qs = new URLSearchParams({ limit: "100" });
+  if (filters.group) qs.set("group", filters.group);
+  if (filters.search) qs.set("search", filters.search);
+  return useQuery({
+    queryKey: ["admin-pool-members", filters.group ?? "", filters.search ?? ""],
+    queryFn: () => apiGet<AdminPoolMember[]>(`/membership/admin?${qs.toString()}`),
+  });
+}
+
+export interface AdminUserAbonemen {
+  id: string;
+  start_date: string;
+  end_date: string;
+  remaining_sessions: number;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  expiry_group: ExpiryGroup;
+  users?: AdminUserRef | null;
+  abonemen_packages?: {
+    id: string;
+    name: string;
+    price: string;
+    sessions_per_week: number;
+    duration_weeks: number;
+  } | null;
+}
+
+export function useActiveAbonemen(filters: { group?: ExpiryGroup; search?: string }) {
+  const qs = new URLSearchParams({ limit: "100" });
+  if (filters.group) qs.set("group", filters.group);
+  if (filters.search) qs.set("search", filters.search);
+  return useQuery({
+    queryKey: ["admin-abonemen-aktif", filters.group ?? "", filters.search ?? ""],
+    queryFn: () => apiGet<AdminUserAbonemen[]>(`/abonemen/active?${qs.toString()}`),
   });
 }
 
@@ -593,5 +729,27 @@ export function usePoolGroupDiscount() {
       );
       return row.value?.tiers ?? [];
     },
+  });
+}
+
+// ---- Profil akun ----
+export interface UpdateProfileBody {
+  full_name?: string;
+  nickname?: string;
+  phone?: string;
+  /** null = hapus foto profil. */
+  photo_url?: string | null;
+}
+
+/**
+ * Ubah profil sendiri. Backend membalas profil terbaru — pemanggil wajib
+ * menaruhnya kembali ke auth-context (setUser) supaya navbar & sapaan ikut
+ * berubah tanpa reload.
+ *
+ * Email & password tidak termasuk: keduanya tidak bisa diubah dari sini.
+ */
+export function useUpdateProfile() {
+  return useMutation({
+    mutationFn: (body: UpdateProfileBody) => apiPatch<AuthUser>("/auth/me", body),
   });
 }
