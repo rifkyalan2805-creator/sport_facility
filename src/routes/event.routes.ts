@@ -16,6 +16,7 @@ import {
 
 const router = Router();
 const adminOnly = [requireAuth, requireRole('admin', 'superadmin')];
+// Check-in peserta = tugas meja depan → reception (staff) ikut, plus admin/superadmin.
 const staffOrAdmin = [requireAuth, requireRole('staff', 'admin', 'superadmin')];
 
 // ---- Categories (didefinisikan sebelum '/:id' agar tidak tertangkap param) ----
@@ -59,7 +60,7 @@ router.get('/registrations/me', requireAuth, eventController.listMine);
  * /api/v1/events/registrations/scan:
  *   post:
  *     tags: [Events]
- *     summary: Check-in peserta via QR (staff/admin)
+ *     summary: Check-in peserta via QR (reception/admin)
  *     security: [{ bearerAuth: [] }]
  *     requestBody:
  *       required: true

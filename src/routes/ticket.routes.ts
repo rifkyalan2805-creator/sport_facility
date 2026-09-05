@@ -13,6 +13,7 @@ import {
 
 const router = Router();
 const adminOnly = [requireAuth, requireRole('admin', 'superadmin')];
+// Scan pintu masuk = tugas meja depan → reception (staff) ikut, plus admin/superadmin.
 const staffOrAdmin = [requireAuth, requireRole('staff', 'admin', 'superadmin')];
 
 // ---- Categories ----
@@ -108,7 +109,7 @@ router.get('/me', requireAuth, ticketController.listMine);
  * /api/v1/tickets/scan:
  *   post:
  *     tags: [Tickets]
- *     summary: Scan tiket di pintu masuk (staff/admin) → tiket used + log
+ *     summary: Scan tiket di pintu masuk (reception/admin) → tiket used + log
  *     security: [{ bearerAuth: [] }]
  *     requestBody:
  *       required: true

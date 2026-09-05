@@ -109,7 +109,21 @@ async function main() {
     },
   });
 
-  console.log('✅ Seed selesai: settings, payment_methods, membership_plans, event_categories, 3 courts (paddle/tennis), admin & member demo.');
+  // Reception (meja depan) — role `staff`: baca transaksi, approve abonemen, scan tiket/event.
+  await prisma.users.upsert({
+    where: { email: 'reception@sportfacility.test' },
+    update: {},
+    create: {
+      email: 'reception@sportfacility.test',
+      phone: '081100009003',
+      full_name: 'Reception Demo',
+      password_hash: await bcrypt.hash('Reception#12345', 10),
+      role: 'staff',
+      email_verified: true,
+    },
+  });
+
+  console.log('✅ Seed selesai: settings, payment_methods, membership_plans, event_categories, 3 courts (paddle/tennis), admin, member & reception demo.');
 }
 
 main()

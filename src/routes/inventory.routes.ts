@@ -13,20 +13,20 @@ import {
 } from '../validators/inventory.validator';
 
 const router = Router();
-const staffOrAdmin = [requireAuth, requireRole('staff', 'admin', 'superadmin')];
+const adminOnly = [requireAuth, requireRole('admin', 'superadmin')];
 
 // ---- Categories ----
 /**
  * @openapi
  * /api/v1/inventory/categories:
  *   get: { tags: [Inventory], summary: List kategori produk, security: [{ bearerAuth: [] }], responses: { 200: { description: OK } } }
- *   post: { tags: [Inventory], summary: Buat kategori (staff/admin), security: [{ bearerAuth: [] }], responses: { 201: { description: OK } } }
+ *   post: { tags: [Inventory], summary: Buat kategori (superadmin/admin), security: [{ bearerAuth: [] }], responses: { 201: { description: OK } } }
  */
-router.get('/categories', ...staffOrAdmin, inventoryController.listCategories);
-router.post('/categories', ...staffOrAdmin, validate(createCategorySchema, 'body'), inventoryController.createCategory);
+router.get('/categories', ...adminOnly, inventoryController.listCategories);
+router.post('/categories', ...adminOnly, validate(createCategorySchema, 'body'), inventoryController.createCategory);
 router.patch(
   '/categories/:id',
-  ...staffOrAdmin,
+  ...adminOnly,
   validate(categoryIdParamSchema, 'params'),
   validate(updateCategorySchema, 'body'),
   inventoryController.updateCategory
@@ -37,14 +37,14 @@ router.patch(
  * @openapi
  * /api/v1/inventory/products:
  *   get: { tags: [Inventory], summary: List produk aktif, security: [{ bearerAuth: [] }], responses: { 200: { description: OK } } }
- *   post: { tags: [Inventory], summary: Buat produk (staff/admin), security: [{ bearerAuth: [] }], responses: { 201: { description: OK }, 409: { description: SKU dipakai } } }
+ *   post: { tags: [Inventory], summary: Buat produk (superadmin/admin), security: [{ bearerAuth: [] }], responses: { 201: { description: OK }, 409: { description: SKU dipakai } } }
  */
-router.get('/products', ...staffOrAdmin, inventoryController.listProducts);
-router.post('/products', ...staffOrAdmin, validate(createProductSchema, 'body'), inventoryController.createProduct);
-router.get('/products/:id', ...staffOrAdmin, validate(productIdParamSchema, 'params'), inventoryController.getProduct);
+router.get('/products', ...adminOnly, inventoryController.listProducts);
+router.post('/products', ...adminOnly, validate(createProductSchema, 'body'), inventoryController.createProduct);
+router.get('/products/:id', ...adminOnly, validate(productIdParamSchema, 'params'), inventoryController.getProduct);
 router.patch(
   '/products/:id',
-  ...staffOrAdmin,
+  ...adminOnly,
   validate(productIdParamSchema, 'params'),
   validate(updateProductSchema, 'body'),
   inventoryController.updateProduct
@@ -65,14 +65,14 @@ router.patch(
  */
 router.post(
   '/products/:id/stock',
-  ...staffOrAdmin,
+  ...adminOnly,
   validate(productIdParamSchema, 'params'),
   validate(adjustStockSchema, 'body'),
   inventoryController.adjustStock
 );
 router.get(
   '/products/:id/logs',
-  ...staffOrAdmin,
+  ...adminOnly,
   validate(productIdParamSchema, 'params'),
   inventoryController.listLogs
 );
