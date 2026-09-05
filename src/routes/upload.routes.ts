@@ -6,8 +6,12 @@ import { AppError } from '../utils/AppError';
 
 const router = Router();
 
-/** Bungkus multer agar error (ukuran/tipe) jadi AppError yang rapi. */
-function uploadMemberPhoto(req: Request, res: Response, next: NextFunction) {
+/**
+ * Bungkus multer agar error (ukuran/tipe) jadi AppError yang rapi.
+ * Dipakai bersama oleh foto member card dan foto profil — batasannya sama
+ * (1 gambar, ≤2 MB, JPG/PNG/WebP); yang berbeda hanya bucket tujuannya.
+ */
+function uploadImage(req: Request, res: Response, next: NextFunction) {
   memberPhotoUpload.single('photo')(req, res, (err: unknown) => {
     if (!err) return next();
     if (err instanceof AppError) return next(err);
@@ -33,9 +37,34 @@ function uploadMemberPhoto(req: Request, res: Response, next: NextFunction) {
  *             properties:
  *               photo: { type: string, format: binary }
  *     responses:
- *       201: { description: Terunggah — kembalikan url relatif }
+ *       201: { description: Terunggah — kembalikan url publik absolut }
  *       422: { description: File wajib / tipe salah / terlalu besar }
  */
-router.post('/member-photo', requireAuth, uploadMemberPhoto, uploadController.memberPhoto);
+router.post('/member-photo', requireAuth, uploadImage, uploadController.memberPhoto);
+
+/**
+ * @openapi
+ * /api/v1/uploads/avatar:
+ *   post:
+ *     tags: [Uploads]
+ *     summary: Unggah foto profil akun (JPG/PNG/WebP, ≤2 MB) → { url }
+ *     description: >
+ *       Hanya mengunggah berkasnya. Simpan URL yang dikembalikan ke profil
+ *       dengan PATCH /api/v1/auth/me { photo_url }.
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               photo: { type: string, format: binary }
+ *     responses:
+ *       201: { description: Terunggah — kembalikan url publik absolut }
+ *       422: { description: File wajib / tipe salah / terlalu besar }
+ *       502: { description: Supabase Storage gagal (mis. bucket tidak ada) }
+ */
+router.post('/avatar', requireAuth, uploadImage, uploadController.avatar);
 
 export default router;

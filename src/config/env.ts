@@ -26,6 +26,16 @@ const envSchema = z
     BCRYPT_ROUNDS: z.coerce.number().int().min(4).max(15).default(10),
     // CORS — daftar origin yang diizinkan, dipisah koma. Kosong = fallback dev (localhost:3001).
     CORS_ORIGINS: z.string().optional(),
+    // Supabase Storage — foto member disimpan di bucket, bukan di disk lokal.
+    // WAJIB: tanpa ini upload tidak punya tujuan, jadi gagal-cepat saat boot.
+    SUPABASE_URL: z.string().url(),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().min(20, 'SUPABASE_SERVICE_ROLE_KEY tidak valid'),
+    SUPABASE_STORAGE_BUCKET: z.string().min(1),
+    // Bucket foto profil akun — dipisah dari foto member card agar kuota &
+    // penghapusan bisa diatur sendiri. Diberi default (bukan wajib seperti
+    // bucket di atas) supaya clone lama tetap bisa boot; kalau bucket-nya
+    // belum ada di Supabase, kegagalan muncul saat upload sebagai 502.
+    SUPABASE_AVATAR_BUCKET: z.string().min(1).default('avatar'),
     // Rate limiting — window & batas untuk limiter global dan khusus auth.
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),

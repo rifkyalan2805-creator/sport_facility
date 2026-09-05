@@ -1,33 +1,33 @@
 import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
-import { nanoid } from 'nanoid';
 import { AppError } from '../utils/AppError';
 
-// Folder penyimpanan file upload (disk). Disajikan statis via /uploads.
+// LEGACY — foto lama (sebelum migrasi ke Supabase Storage) masih tersimpan di
+// folder ini dan disajikan statis via /uploads agar member card lama tidak rusak.
+// Upload BARU tidak lagi menulis ke sini; lihat services/storage.service.ts.
 export const UPLOADS_ROOT = path.join(process.cwd(), 'uploads');
 export const MEMBER_PHOTOS_DIR = path.join(UPLOADS_ROOT, 'member-photos');
 
-/** Pastikan folder upload ada (dipanggil saat boot). */
+/** Pastikan folder upload legacy ada (dipanggil saat boot). */
 export function ensureUploadDirs(): void {
   fs.mkdirSync(MEMBER_PHOTOS_DIR, { recursive: true });
 }
 
 // Mime yang diizinkan → ekstensi file.
-const EXT_BY_MIME: Record<string, string> = {
+export const EXT_BY_MIME: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
   'image/webp': '.webp',
 };
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, MEMBER_PHOTOS_DIR),
-  filename: (_req, file, cb) => cb(null, `${nanoid()}${EXT_BY_MIME[file.mimetype] ?? '.img'}`),
-});
-
-/** Multer untuk foto member: 1 gambar, ≤2 MB, hanya JPG/PNG/WebP. */
+/**
+ * Multer untuk foto member: 1 gambar, ≤2 MB, hanya JPG/PNG/WebP.
+ * Memakai memoryStorage — file diteruskan sebagai buffer ke Supabase Storage
+ * dan tidak pernah menyentuh disk (disk container hilang tiap redeploy).
+ */
 export const memberPhotoUpload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (EXT_BY_MIME[file.mimetype]) cb(null, true);
