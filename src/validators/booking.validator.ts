@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { booking_status } from '@prisma/client';
+import { booking_status, booking_type, court_type } from '@prisma/client';
 
 const uuid = z.string().uuid('Harus berupa UUID valid');
 const dateStr = z
@@ -35,6 +35,10 @@ export const createBookingSchema = z
 
 export const listBookingQuerySchema = z.object({
   court_id: uuid.optional(),
+  // Saring per cabang olahraga (lewat courts.type) & jenis booking —
+  // dipakai halaman admin "Insidentil Tenis" / "Insidentil Padel".
+  court_type: z.nativeEnum(court_type).optional(),
+  booking_type: z.nativeEnum(booking_type).optional(),
   status: z.nativeEnum(booking_status).optional(),
   booking_date: dateStr.optional(),
   // scope=all hanya dihormati untuk admin (dicek di controller).

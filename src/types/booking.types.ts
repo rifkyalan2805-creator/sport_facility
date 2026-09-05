@@ -1,4 +1,4 @@
-import { booking_status, booking_type } from '@prisma/client';
+import { booking_status, booking_type, court_type } from '@prisma/client';
 
 // Input tervalidasi untuk membuat booking (insidentil & abonemen disatukan).
 export interface CreateBookingInput {
@@ -16,6 +16,10 @@ export interface CreateBookingInput {
 export interface ListBookingFilter {
   userId?: string;
   courtId?: string;
+  /** Saring per cabang olahraga lewat relasi courts.type (mis. tennis, paddle). */
+  courtType?: court_type;
+  /** insidentil vs abonemen. */
+  bookingType?: booking_type;
   status?: booking_status;
   bookingDate?: string; // YYYY-MM-DD
   page: number;

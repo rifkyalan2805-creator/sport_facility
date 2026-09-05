@@ -78,6 +78,9 @@ export class BookingRepository {
     const where: Prisma.bookingsWhereInput = {
       ...(filter.userId ? { user_id: filter.userId } : {}),
       ...(filter.courtId ? { court_id: filter.courtId } : {}),
+      // Cabang olahraga disaring lewat relasi courts (tidak ada kolomnya di bookings).
+      ...(filter.courtType ? { courts: { type: filter.courtType } } : {}),
+      ...(filter.bookingType ? { booking_type: filter.bookingType } : {}),
       ...(filter.status ? { status: filter.status } : {}),
       ...(filter.bookingDate ? { booking_date: new Date(filter.bookingDate) } : {}),
     };
@@ -89,8 +92,9 @@ export class BookingRepository {
         skip: (filter.page - 1) * filter.limit,
         take: filter.limit,
         include: {
-          courts: { select: { name: true, code: true } },
-          users: { select: { full_name: true, email: true } },
+          courts: { select: { name: true, code: true, type: true } },
+          // nickname = keterangan "subject" pada tabel-tabel admin.
+          users: { select: { nickname: true, full_name: true, email: true, phone: true } },
         },
       }),
       db.bookings.count({ where }),

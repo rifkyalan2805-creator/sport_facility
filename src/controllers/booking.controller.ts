@@ -29,12 +29,14 @@ export class BookingController {
 
   list = catchAsync(async (req: Request, res: Response) => {
     const q = req.query as unknown as ListBookingQuery;
-    // scope=all → semua booking (hanya admin); selain itu terkunci ke user.
-    const isAdmin = req.userRole === 'admin' || req.userRole === 'superadmin';
-    const listAll = isAdmin && q.scope === 'all';
+    // scope=all → semua booking (superadmin/admin & reception); selain itu terkunci ke user.
+    const canViewAll = ['staff', 'admin', 'superadmin'].includes(req.userRole ?? '');
+    const listAll = canViewAll && q.scope === 'all';
     const result = await this.service.listBookings({
       userId: listAll ? undefined : req.userId!,
       courtId: q.court_id,
+      courtType: q.court_type,
+      bookingType: q.booking_type,
       status: q.status,
       bookingDate: q.booking_date,
       page: q.page,
