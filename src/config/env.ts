@@ -69,11 +69,28 @@ const envSchema = z
     }
   });
 
-const parsed = envSchema.safeParse(process.env);
+/**
+ * Platform deploy (Vercel, Railway, Render, …) gampang menghasilkan variabel
+ * "ada tapi kosong" — entry dibuat di dashboard lalu nilainya tidak diisi.
+ * String kosong BUKAN `undefined`: `.default()` Zod tidak jalan dan pesan
+ * errornya menyesatkan (`DATABASE_URL: 'Invalid url'` padahal belum diisi).
+ * Normalisasi dulu — kosong / hanya spasi = dianggap tidak diisi. `process.env`
+ * sendiri tidak diubah; yang dinormalisasi hanya salinan untuk divalidasi.
+ */
+const treatBlankAsUnset = (raw: NodeJS.ProcessEnv): NodeJS.ProcessEnv => {
+  const out: NodeJS.ProcessEnv = {};
+  for (const [key, value] of Object.entries(raw)) {
+    out[key] = typeof value === 'string' && value.trim() === '' ? undefined : value;
+  }
+  return out;
+};
+
+const parsed = envSchema.safeParse(treatBlankAsUnset(process.env));
 
 if (!parsed.success) {
   // Gagal lebih awal jika konfigurasi environment tidak valid.
   console.error('Invalid environment configuration:', parsed.error.flatten().fieldErrors);
+  console.error('Cocokkan dengan .env.example — "Required" berarti variabel belum diisi.');
   process.exit(1);
 }
 

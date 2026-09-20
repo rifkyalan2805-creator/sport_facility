@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc -p tsconfig.json",
+    "postinstall": "prisma generate",
     "start": "node dist/server.js",
     "test": "jest --runInBand",
     "test:integration": "jest --runInBand --config jest.integration.config.js",
