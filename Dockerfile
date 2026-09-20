@@ -1,11 +1,13 @@
 # Image backend API (Express + Prisma). Dipakai Railway maupun Render —
 # keduanya memakai Dockerfile ini apa adanya; frontend web/ tidak ikut.
 #
-# node:20-slim + openssl: Prisma 5 butuh libssl untuk query engine-nya; image
+# node:22-slim + openssl: Prisma 5 butuh libssl untuk query engine-nya; image
 # slim tidak selalu membawanya, dan kegagalannya baru muncul saat runtime.
+# Node 22+ wajib: @supabase/supabase-js butuh native WebSocket saat createClient(),
+# di bawah itu proses langsung crash meski Realtime tidak dipakai.
 
 # ---------- build ----------
-FROM node:20-slim AS build
+FROM node:22-slim AS build
 WORKDIR /app
 
 RUN apt-get update \
@@ -22,7 +24,7 @@ COPY src ./src
 RUN npm run build
 
 # ---------- runtime ----------
-FROM node:20-slim AS runtime
+FROM node:22-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
