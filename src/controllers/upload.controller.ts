@@ -27,6 +27,19 @@ export class UploadController {
     const url = await this.storage.uploadAvatar(req.file);
     res.status(HttpStatus.CREATED).json({ success: true, data: { url } });
   });
+
+  /**
+   * Unggah gambar konten CMS (cover berita, foto galeri, banner) → URL publik.
+   * Seperti avatar: URL-nya belum tersimpan, admin mengirimkannya lewat
+   * POST/PATCH resource CMS terkait.
+   */
+  contentImage = catchAsync(async (req: Request, res: Response) => {
+    if (!req.file) {
+      throw AppError.unprocessable('File gambar wajib diunggah (field "photo")');
+    }
+    const url = await this.storage.uploadContentImage(req.file);
+    res.status(HttpStatus.CREATED).json({ success: true, data: { url } });
+  });
 }
 
 export const uploadController = new UploadController();

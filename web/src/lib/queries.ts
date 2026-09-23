@@ -732,6 +732,43 @@ export function usePoolGroupDiscount() {
   });
 }
 
+// ---- Berita (CMS) ----
+export interface NewsItem {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  content: string;
+  cover_url: string | null;
+  cover_alt: string | null;
+  /** Susunan cover di kartu sorotan /berita. */
+  cover_layout: "landscape" | "portrait";
+  category: string;
+  author: string | null;
+  status: "draft" | "published" | "archived";
+  published_at: string | null;
+  created_at: string;
+}
+
+/**
+ * Daftar berita. Endpoint-nya publik: tanpa token hanya yang berstatus
+ * published, sedangkan admin yang sedang login ikut menerima draft/arsip.
+ */
+export function useNewsList() {
+  return useQuery({
+    queryKey: ["news"],
+    queryFn: () => apiGet<NewsItem[]>("/cms/news"),
+  });
+}
+
+export function useNewsItem(slug: string) {
+  return useQuery({
+    queryKey: ["news", slug],
+    queryFn: () => apiGet<NewsItem>(`/cms/news/${slug}`),
+    enabled: Boolean(slug),
+  });
+}
+
 // ---- Profil akun ----
 export interface UpdateProfileBody {
   full_name?: string;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PhotoUpload, { type PhotoShape } from "@/components/PhotoUpload";
 
 export type FieldType =
   | "text"
@@ -11,7 +12,8 @@ export type FieldType =
   | "date"
   | "datetime"
   | "textarea"
-  | "csv";
+  | "csv"
+  | "image";
 
 export interface FieldDef {
   name: string;
@@ -22,6 +24,20 @@ export interface FieldDef {
   optional?: boolean; // bila kosong → tidak dikirim (untuk field opsional backend)
   placeholder?: string;
   help?: string;
+  rows?: number; // khusus textarea
+  // --- khusus type "image" ---
+  /** Endpoint unggah (menentukan bucket Supabase). Default: gambar konten CMS. */
+  uploadEndpoint?: string;
+  /** Rasio pratinjau = rasio tampilnya nanti. Default "wide" (16:9). */
+  shape?: PhotoShape;
+  /** Sisi terpanjang hasil downscale di browser. Default 1600 px. */
+  maxPx?: number;
+  /**
+   * Nama field lain yang ikut disetel ke orientasi berkas yang baru diunggah
+   * ("portrait" / "landscape") — sekadar saran, admin tetap bisa menimpanya.
+   * Field tujuannya harus menerima kedua nilai itu apa adanya.
+   */
+  orientationField?: string;
 }
 
 type FormValue = string | boolean;
@@ -64,6 +80,12 @@ function toBody(fields: FieldDef[], values: Record<string, FormValue>): Record<s
     if (f.type === "csv") {
       const arr = str ? str.split(",").map((s) => s.trim()).filter(Boolean) : [];
       if (arr.length || !f.optional) body[f.name] = arr;
+      continue;
+    }
+    if (f.type === "image") {
+      // Gambar dihapus → kirim null eksplisit; kalau dilewat seperti field
+      // optional lain, cover lama akan tetap menempel saat edit.
+      body[f.name] = str || null;
       continue;
     }
     if (str === "" && f.optional) continue; // jangan kirim optional kosong
@@ -133,6 +155,40 @@ export default function AdminForm({
                   />
                   {f.label}
                 </label>
+              ) : f.type === "image" ? (
+                /* Bukan <label>: PhotoUpload punya tombolnya sendiri, dan label
+                   yang membungkus tombol bikin klik terpicu dua kali. */
+                <div>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-sm font-medium text-ink-700">{f.label}</span>
+                    {values[f.name] ? (
+                      <button
+                        type="button"
+                        onClick={() => set(f.name, "")}
+                        className="text-xs font-medium text-ink-400 outline-none transition-colors hover:text-red-600 focus-visible:text-red-600"
+                      >
+                        Hapus gambar
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="mt-2">
+                    <PhotoUpload
+                      value={String(values[f.name] ?? "")}
+                      onChange={(url, orientation) => {
+                        set(f.name, url);
+                        if (f.orientationField && orientation) {
+                          set(f.orientationField, orientation);
+                        }
+                      }}
+                      endpoint={f.uploadEndpoint ?? "/uploads/content"}
+                      shape={f.shape ?? "wide"}
+                      max={f.maxPx ?? 1600}
+                      alt={f.label}
+                      hint={f.placeholder ?? "JPG/PNG/WebP · diperkecil otomatis sebelum diunggah."}
+                      invalid={f.required && !values[f.name]}
+                    />
+                  </div>
+                </div>
               ) : (
                 <label className="block text-sm font-medium text-ink-700">
                   {f.label}
@@ -152,7 +208,7 @@ export default function AdminForm({
                     </select>
                   ) : f.type === "textarea" ? (
                     <textarea
-                      rows={2}
+                      rows={f.rows ?? 2}
                       required={f.required}
                       value={String(values[f.name] ?? "")}
                       onChange={(e) => set(f.name, e.target.value)}

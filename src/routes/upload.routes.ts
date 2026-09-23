@@ -1,10 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { uploadController } from '../controllers/upload.controller';
-import { requireAuth } from '../middlewares/auth';
+import { requireAuth, requireRole } from '../middlewares/auth';
 import { memberPhotoUpload } from '../config/upload';
 import { AppError } from '../utils/AppError';
 
 const router = Router();
+const adminOnly = [requireAuth, requireRole('admin', 'superadmin')];
 
 /**
  * Bungkus multer agar error (ukuran/tipe) jadi AppError yang rapi.
@@ -66,5 +67,31 @@ router.post('/member-photo', requireAuth, uploadImage, uploadController.memberPh
  *       502: { description: Supabase Storage gagal (mis. bucket tidak ada) }
  */
 router.post('/avatar', requireAuth, uploadImage, uploadController.avatar);
+
+/**
+ * @openapi
+ * /api/v1/uploads/content:
+ *   post:
+ *     tags: [Uploads]
+ *     summary: Unggah gambar konten CMS (JPG/PNG/WebP, ≤2 MB) → { url }
+ *     description: >
+ *       Khusus admin. Hanya mengunggah berkasnya — simpan URL yang
+ *       dikembalikan lewat POST/PATCH resource CMS (mis. cover_url berita).
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               photo: { type: string, format: binary }
+ *     responses:
+ *       201: { description: Terunggah — kembalikan url publik absolut }
+ *       403: { description: Bukan admin }
+ *       422: { description: File wajib / tipe salah / terlalu besar }
+ *       502: { description: Supabase Storage gagal (mis. bucket tidak ada) }
+ */
+router.post('/content', ...adminOnly, uploadImage, uploadController.contentImage);
 
 export default router;

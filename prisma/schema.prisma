@@ -989,6 +989,28 @@ model pages {
   updated_at DateTime   @default(now()) @db.Timestamptz(6)
 }
 
+// Berita/artikel — sumber halaman publik /berita. cover_url = URL publik
+// absolut hasil unggah ke Supabase Storage (lihat db/add_news.sql).
+model news {
+  id           String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  slug         String     @unique @db.VarChar(200)
+  title        String     @db.VarChar(250)
+  excerpt      String?
+  content      String
+  cover_url    String?
+  cover_alt    String?    @db.VarChar(250)
+  // 'landscape' | 'portrait' — dijaga CHECK di DB (db/add_news_cover_layout.sql).
+  cover_layout String     @default("landscape") @db.VarChar(20)
+  category     String     @default("umum") @db.VarChar(80)
+  author       String?    @db.VarChar(120)
+  status       cms_status @default(draft)
+  published_at DateTime?  @db.Timestamptz(6)
+  created_at   DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime   @default(now()) @db.Timestamptz(6)
+
+  @@index([status, published_at])
+}
+
 // =============================================================
 //  HARGA PER-SPORT (sumber harga booking) — Fase 1
 // =============================================================

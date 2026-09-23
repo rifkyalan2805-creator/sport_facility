@@ -71,6 +71,26 @@ export class CmsController {
   updatePage = catchAsync(async (req: Request, res: Response) => {
     res.json({ success: true, data: await this.service.updatePage(req.params.id, req.body) });
   });
+
+  // ---- News ----
+  listNews = catchAsync(async (req: Request, res: Response) => {
+    res.json({ success: true, data: await this.service.listNews(!isAdmin(req)) });
+  });
+  getNews = catchAsync(async (req: Request, res: Response) => {
+    const data = await this.service.getNewsBySlug(req.params.slug, !isAdmin(req));
+    res.json({ success: true, data });
+  });
+  createNews = catchAsync(async (req: Request, res: Response) => {
+    const data = await this.service.createNews(req.body);
+    res.status(HttpStatus.CREATED).json({ success: true, data });
+  });
+  updateNews = catchAsync(async (req: Request, res: Response) => {
+    res.json({ success: true, data: await this.service.updateNews(req.params.id, req.body) });
+  });
+  deleteNews = catchAsync(async (req: Request, res: Response) => {
+    await this.service.deleteNews(req.params.id);
+    res.status(HttpStatus.NO_CONTENT).send();
+  });
 }
 
 export const cmsController = new CmsController();

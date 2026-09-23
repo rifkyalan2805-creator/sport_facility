@@ -76,6 +76,63 @@ export class CmsService {
     if (typeof data.slug === 'string') patch.slug = slugify(data.slug);
     return this.cms.updatePage(id, patch);
   }
+
+  // ---- News ----
+  listNews(publishedOnly: boolean) {
+    return this.cms.listNews(publishedOnly);
+  }
+
+  /**
+   * Detail berita untuk halaman publik. `publishedOnly` = pemanggil bukan
+   * admin: draft & arsip disembunyikan sebagai 404, bukan 403 — keberadaan
+   * berita yang belum terbit tidak perlu bocor.
+   */
+  async getNewsBySlug(slug: string, publishedOnly: boolean) {
+    const item = await this.cms.findNewsBySlug(slug);
+    if (!item || (publishedOnly && item.status !== 'published')) {
+      throw AppError.notFound('Berita tidak ditemukan');
+    }
+    return item;
+  }
+
+  async createNews(data: Omit<Prisma.newsUncheckedCreateInput, 'slug'> & { slug?: string }) {
+    const slug = slugify(data.slug || data.title);
+    if (await this.cms.findNewsBySlug(slug)) {
+      throw AppError.conflict(`Slug "${slug}" sudah dipakai berita lain`);
+    }
+    return this.cms.createNews({
+      ...data,
+      slug,
+      // Langsung terbit → stempel tanggal terbit sekarang, kecuali admin
+      // menentukan sendiri (mis. mengarsipkan berita lama).
+      published_at: data.published_at ?? (data.status === 'published' ? new Date() : null),
+    });
+  }
+
+  async updateNews(id: string, data: Prisma.newsUncheckedUpdateInput & { slug?: string }) {
+    const current = await this.cms.findNews(id);
+    if (!current) throw AppError.notFound('Berita tidak ditemukan');
+
+    const patch = { ...data };
+    if (typeof data.slug === 'string') {
+      patch.slug = slugify(data.slug);
+      const bentrok = await this.cms.findNewsBySlug(patch.slug);
+      if (bentrok && bentrok.id !== id) {
+        throw AppError.conflict(`Slug "${patch.slug}" sudah dipakai berita lain`);
+      }
+    }
+    // Draft → published pertama kali: isi tanggal terbit otomatis. Diterbitkan
+    // ulang setelah diarsipkan tidak menimpa tanggal terbit aslinya.
+    if (data.status === 'published' && !current.published_at && data.published_at == null) {
+      patch.published_at = new Date();
+    }
+    return this.cms.updateNews(id, patch);
+  }
+
+  async deleteNews(id: string) {
+    if (!(await this.cms.findNews(id))) throw AppError.notFound('Berita tidak ditemukan');
+    await this.cms.deleteNews(id);
+  }
 }
 
 export const cmsService = new CmsService();

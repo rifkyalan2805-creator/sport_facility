@@ -9,11 +9,7 @@ import Avatar from "@/components/Avatar";
 import { useAuth } from "@/lib/auth-context";
 import { displayName } from "@/lib/user";
 
-/**
- * Menu utama. `/fasilitas`, `/berita`, `/tentang-kami`, dan `/kontak` sengaja
- * menunjuk rute final yang halamannya belum dibuat — link-nya 404 sampai
- * halaman tersebut ditambahkan, sesuai keputusan pemilik proyek.
- */
+/** Menu utama — kelima rute di bawah sudah punya halamannya masing-masing. */
 const LINKS = [
   { label: "Home", href: "/" },
   { label: "Fasilitas", href: "/fasilitas" },

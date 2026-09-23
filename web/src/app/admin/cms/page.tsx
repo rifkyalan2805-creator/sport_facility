@@ -1,10 +1,21 @@
 "use client";
 
 import AdminResource, { type ResourceConfig } from "@/components/admin/AdminResource";
-import { boolBadge, pill } from "@/components/admin/cells";
+import { boolBadge, pill, thumb } from "@/components/admin/cells";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
+import { formatDateID } from "@/lib/format";
 
 const truncate = (s: string, n = 50) => (s.length > n ? s.slice(0, n) + "…" : s);
+
+// Panduan ukuran gambar — tampil sebagai hint di form upload. Dua macam,
+// karena perlakuannya memang beda:
+//  - `full`  : cover berita tampil UTUH (object-contain), rasio apa pun aman.
+//  - `crop`  : banner & galeri mengisi kotak berasio, sisi lebihnya terpotong.
+// Keduanya diperkecil ke 1600 px di browser sebelum diunggah.
+const IMG_HINT = {
+  full: "Tampil utuh — rasio bebas, tidak dipotong. Sisi terpanjang idealnya 1600 px.",
+  crop: "Rasio 16:9 (idealnya 1600×900 px) — sisi lebihnya terpotong, taruh objek penting di tengah.",
+} as const;
 
 interface Banner {
   id: string;
@@ -42,6 +53,20 @@ interface Page {
   meta_desc: string | null;
   status: string;
 }
+interface News {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  content: string;
+  cover_url: string | null;
+  cover_alt: string | null;
+  cover_layout: string;
+  category: string;
+  author: string | null;
+  status: string;
+  published_at: string | null;
+}
 
 const banners: ResourceConfig<Banner> = {
   title: "Banner",
@@ -50,6 +75,7 @@ const banners: ResourceConfig<Banner> = {
   list: () => apiGet<Banner[]>("/cms/banners"),
   idOf: (r) => r.id,
   columns: [
+    { key: "image_url", label: "Gambar", render: (r) => thumb(r.image_url, r.title) },
     { key: "title", label: "Judul" },
     { key: "position", label: "Posisi", render: (r) => pill(r.position) },
     { key: "is_active", label: "Status", render: (r) => boolBadge(r.is_active) },
@@ -57,7 +83,7 @@ const banners: ResourceConfig<Banner> = {
   fields: [
     { name: "title", label: "Judul", type: "text", required: true },
     { name: "subtitle", label: "Subjudul", type: "text", optional: true },
-    { name: "image_url", label: "URL Gambar", type: "text", required: true, placeholder: "https://…", help: "Harus URL lengkap." },
+    { name: "image_url", label: "Gambar", type: "image", required: true, placeholder: IMG_HINT.crop },
     { name: "link_url", label: "URL Tautan", type: "text", optional: true, placeholder: "https://…" },
     { name: "position", label: "Posisi", type: "text", placeholder: "hero" },
     { name: "is_active", label: "Aktif", type: "boolean" },
@@ -116,13 +142,14 @@ const galleries: ResourceConfig<Gallery> = {
   list: () => apiGet<Gallery[]>("/cms/galleries"),
   idOf: (r) => r.id,
   columns: [
+    { key: "image_url", label: "Foto", render: (r) => thumb(r.image_url, r.alt_text ?? "") },
     { key: "title", label: "Judul", render: (r) => r.title ?? "—" },
     { key: "category", label: "Kategori", render: (r) => pill(r.category) },
     { key: "is_active", label: "Status", render: (r) => boolBadge(r.is_active) },
   ],
   fields: [
     { name: "title", label: "Judul", type: "text", optional: true },
-    { name: "image_url", label: "URL Gambar", type: "text", required: true, placeholder: "https://…" },
+    { name: "image_url", label: "Gambar", type: "image", required: true, placeholder: IMG_HINT.crop },
     { name: "category", label: "Kategori", type: "text", placeholder: "facility" },
     { name: "alt_text", label: "Alt text", type: "text", optional: true },
     { name: "is_active", label: "Aktif", type: "boolean" },
@@ -140,6 +167,100 @@ const galleries: ResourceConfig<Gallery> = {
   create: (b) => apiPost("/cms/galleries", b),
   update: (id, b) => apiPatch(`/cms/galleries/${id}`, b),
   remove: (id) => apiDelete(`/cms/galleries/${id}`),
+};
+
+const news: ResourceConfig<News> = {
+  title: "Berita",
+  description:
+    "Tampil di halaman publik /berita. Hanya status “published” yang terlihat pengunjung — draft aman untuk disiapkan lebih dulu.",
+  queryKey: "cms-news",
+  addLabel: "Berita",
+  list: () => apiGet<News[]>("/cms/news"),
+  idOf: (r) => r.id,
+  columns: [
+    { key: "cover_url", label: "Cover", render: (r) => thumb(r.cover_url, r.cover_alt ?? r.title) },
+    { key: "title", label: "Judul", render: (r) => truncate(r.title, 44) },
+    { key: "category", label: "Kategori", render: (r) => pill(r.category) },
+    { key: "status", label: "Status", render: (r) => pill(r.status) },
+    {
+      key: "published_at",
+      label: "Terbit",
+      render: (r) => (r.published_at ? formatDateID(r.published_at) : "—"),
+    },
+  ],
+  fields: [
+    { name: "title", label: "Judul", type: "text", required: true },
+    {
+      name: "slug",
+      label: "Slug",
+      type: "text",
+      optional: true,
+      placeholder: "turnamen-padel-2026",
+      help: "Alamat halaman: /berita/<slug>. Kosongkan untuk dibuat otomatis dari judul.",
+    },
+    {
+      name: "cover_url",
+      label: "Cover",
+      type: "image",
+      optional: true,
+      placeholder: IMG_HINT.full,
+      orientationField: "cover_layout", // isi saran tata letak dari berkasnya
+    },
+    {
+      name: "cover_layout",
+      label: "Tata letak cover",
+      type: "select",
+      required: true, // cegah opsi kosong "— pilih —" terkirim → 422 dari Zod
+      options: [
+        { value: "landscape", label: "Melebar — teks di bawah gambar" },
+        { value: "portrait", label: "Bersanding — gambar tinggi, teks di sampingnya" },
+      ],
+      help: "Terisi otomatis dari gambar yang kamu unggah; ubah kalau mau susunan lain. Hanya berlaku di kartu sorotan (berita terbaru).",
+    },
+    {
+      name: "cover_alt",
+      label: "Alt text cover",
+      type: "text",
+      optional: true,
+      help: "Deskripsi singkat gambar untuk pembaca layar & saat gambar gagal dimuat.",
+    },
+    {
+      name: "excerpt",
+      label: "Ringkasan",
+      type: "textarea",
+      optional: true,
+      rows: 3,
+      help: "1–2 kalimat yang tampil di kartu daftar berita. Kosong → diambil dari awal isi.",
+    },
+    { name: "content", label: "Isi berita", type: "textarea", required: true, rows: 10, help: "Pisahkan paragraf dengan baris kosong." },
+    { name: "category", label: "Kategori", type: "text", placeholder: "umum" },
+    { name: "author", label: "Penulis", type: "text", optional: true },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      required: true,
+      options: ["draft", "published", "archived"].map((s) => ({ value: s, label: s })),
+      help: "Tanggal terbit terisi otomatis saat pertama kali dipublikasikan.",
+    },
+  ],
+  defaults: { category: "umum", status: "draft", cover_layout: "landscape" },
+  toForm: (r) => ({
+    title: r.title,
+    slug: r.slug,
+    cover_url: r.cover_url ?? "",
+    cover_layout: r.cover_layout,
+    cover_alt: r.cover_alt ?? "",
+    excerpt: r.excerpt ?? "",
+    content: r.content,
+    category: r.category,
+    author: r.author ?? "",
+    status: r.status,
+  }),
+  create: (b) => apiPost("/cms/news", b),
+  update: (id, b) => apiPatch(`/cms/news/${id}`, b),
+  remove: (id) => apiDelete(`/cms/news/${id}`),
+  confirmDelete: (r) => `Hapus berita “${r.title}”? Tindakan ini permanen.`,
 };
 
 const pages: ResourceConfig<Page> = {
@@ -187,6 +308,9 @@ export default function AdminCmsPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">Admin</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink-900">Konten (CMS)</h1>
       </div>
+      {/* Berita ditaruh paling atas: satu-satunya konten yang rutin ditambah,
+          sisanya cenderung sekali set lalu jarang disentuh. */}
+      <AdminResource config={news} />
       <AdminResource config={banners} />
       <AdminResource config={faqs} />
       <AdminResource config={galleries} />

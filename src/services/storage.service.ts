@@ -23,6 +23,9 @@ export const PUBLIC_URL_PREFIX = publicUrlPrefix(env.SUPABASE_STORAGE_BUCKET);
 /** Prefix bucket foto profil akun (dipakai auth.validator). */
 export const AVATAR_URL_PREFIX = publicUrlPrefix(env.SUPABASE_AVATAR_BUCKET);
 
+/** Prefix bucket gambar konten CMS (dipakai cms.validator). */
+export const CONTENT_URL_PREFIX = publicUrlPrefix(env.SUPABASE_CONTENT_BUCKET);
+
 /**
  * Penyimpanan file di Supabase Storage.
  * Bucket bersifat publik, jadi URL yang dikembalikan permanen dan bisa langsung
@@ -32,7 +35,8 @@ export class StorageService {
   constructor(
     private readonly client = supabase,
     private readonly bucket = env.SUPABASE_STORAGE_BUCKET,
-    private readonly avatarBucket = env.SUPABASE_AVATAR_BUCKET
+    private readonly avatarBucket = env.SUPABASE_AVATAR_BUCKET,
+    private readonly contentBucket = env.SUPABASE_CONTENT_BUCKET
   ) {}
 
   /** Unggah foto member card → URL publik absolut. */
@@ -43,6 +47,11 @@ export class StorageService {
   /** Unggah foto profil akun → URL publik absolut. */
   async uploadAvatar(file: Express.Multer.File): Promise<string> {
     return this.upload(this.avatarBucket, file);
+  }
+
+  /** Unggah gambar konten CMS (cover berita/galeri/banner) → URL publik absolut. */
+  async uploadContentImage(file: Express.Multer.File): Promise<string> {
+    return this.upload(this.contentBucket, file);
   }
 
   /**

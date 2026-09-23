@@ -36,6 +36,10 @@ const envSchema = z
     // bucket di atas) supaya clone lama tetap bisa boot; kalau bucket-nya
     // belum ada di Supabase, kegagalan muncul saat upload sebagai 502.
     SUPABASE_AVATAR_BUCKET: z.string().min(1).default('avatar'),
+    // Bucket gambar konten CMS (cover berita, foto galeri, banner) — dipisah
+    // dari foto orang supaya retensi & kuotanya beda. Sama seperti bucket
+    // avatar: punya default, gagal 502 saat upload kalau bucket belum dibuat.
+    SUPABASE_CONTENT_BUCKET: z.string().min(1).default('content'),
     // Rate limiting — window & batas untuk limiter global dan khusus auth.
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),

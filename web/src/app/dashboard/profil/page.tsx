@@ -86,7 +86,7 @@ function ProfileForm({ user }: { user: AuthUser }) {
               setError("");
             }}
             endpoint="/uploads/avatar"
-            round
+            shape="round"
             alt="Foto profil"
             hint="JPG/PNG/WebP, maksimal 2 MB."
           />

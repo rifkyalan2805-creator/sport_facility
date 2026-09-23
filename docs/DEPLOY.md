@@ -51,6 +51,7 @@ kalau ada yang tidak valid. Daftar lengkap beserta komentarnya ada di `.env.exam
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | service_role key — backend only, mem-bypass RLS. |
 | `SUPABASE_STORAGE_BUCKET` | ✅ | Nama bucket persis (case-sensitive). |
 | `SUPABASE_AVATAR_BUCKET` | — | Default `avatar`. |
+| `SUPABASE_CONTENT_BUCKET` | — | Default `content`. Bucket gambar konten CMS (cover berita, galeri, banner) — buat sebagai bucket **public**. |
 | `CORS_ORIGINS` | ✅ | Domain frontend, dipisah koma. **Kosong di production = semua request lintas-origin ditolak.** |
 | `NODE_ENV` | — | Diisi platform (`production`). |
 | `PORT` | — | Di-inject platform. Jangan diset manual. |

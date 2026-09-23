@@ -85,6 +85,34 @@ export class CmsRepository {
   updatePage(id: string, data: Prisma.pagesUncheckedUpdateInput, db: DbClient = prisma) {
     return db.pages.update({ where: { id }, data });
   }
+
+  // ---- News ----
+  /**
+   * Publik: hanya yang published, terbaru dulu berdasar TANGGAL TERBIT.
+   * Admin: semua status, terbaru dulu berdasar tanggal dibuat (draft belum
+   * punya published_at, jadi tanggal buat yang relevan di panel).
+   */
+  listNews(publishedOnly: boolean, db: DbClient = prisma) {
+    return db.news.findMany({
+      where: publishedOnly ? { status: 'published' } : {},
+      orderBy: publishedOnly ? { published_at: 'desc' } : { created_at: 'desc' },
+    });
+  }
+  findNews(id: string, db: DbClient = prisma) {
+    return db.news.findUnique({ where: { id } });
+  }
+  findNewsBySlug(slug: string, db: DbClient = prisma) {
+    return db.news.findUnique({ where: { slug } });
+  }
+  createNews(data: Prisma.newsUncheckedCreateInput, db: DbClient = prisma) {
+    return db.news.create({ data });
+  }
+  updateNews(id: string, data: Prisma.newsUncheckedUpdateInput, db: DbClient = prisma) {
+    return db.news.update({ where: { id }, data: { ...data, updated_at: new Date() } });
+  }
+  deleteNews(id: string, db: DbClient = prisma) {
+    return db.news.delete({ where: { id } });
+  }
 }
 
 export const cmsRepository = new CmsRepository();
