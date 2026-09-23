@@ -17,26 +17,44 @@ const parseOrigins = (raw?: string): string[] =>
     .filter(Boolean);
 
 /**
+ * Ubah 1 entri CORS_ORIGINS jadi matcher. Entri tanpa "*" dicocokkan persis;
+ * entri dengan "*" (mis. untuk preview deployment Vercel yang subdomainnya
+ * acak per-deploy: https://sport-facility-*-tim.vercel.app) dicocokkan lewat
+ * regex, di mana "*" hanya boleh mewakili satu segmen alfanumerik/hyphen
+ * (tidak boleh lompat "." ke domain lain).
+ */
+const originToMatcher = (raw: string): string | RegExp => {
+  if (!raw.includes('*')) return raw;
+  const pattern = raw
+    .split('*')
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('[a-z0-9-]+');
+  return new RegExp(`^${pattern}$`, 'i');
+};
+
+/**
  * Whitelist CORS. Origin yang tidak terdaftar tidak mendapat header CORS
  * (browser memblokir), tanpa melempar 500. Request tanpa header Origin
  * (same-origin, curl, server-to-server, health check) selalu diizinkan.
  */
 const buildCorsOptions = (): CorsOptions => {
-  let allowlist = parseOrigins(env.CORS_ORIGINS);
-  if (allowlist.length === 0) {
+  let origins = parseOrigins(env.CORS_ORIGINS);
+  if (origins.length === 0) {
     if (env.NODE_ENV === 'production') {
       console.warn(
         '[CORS] CORS_ORIGINS kosong di production — semua request lintas-origin akan ditolak. Set CORS_ORIGINS.'
       );
     } else {
-      allowlist = ['http://localhost:3001']; // fallback DX untuk dev/test
+      origins = ['http://localhost:3001']; // fallback DX untuk dev/test
     }
   }
+  const matchers = origins.map(originToMatcher);
 
   return {
     origin: (origin, cb) => {
       if (!origin) return cb(null, true);
-      return cb(null, allowlist.includes(origin));
+      const allowed = matchers.some((m) => (typeof m === 'string' ? m === origin : m.test(origin)));
+      return cb(null, allowed);
     },
     credentials: true,
   };
